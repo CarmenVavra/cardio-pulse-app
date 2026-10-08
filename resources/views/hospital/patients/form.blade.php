@@ -79,7 +79,7 @@
 
             <fieldset class="form-section">
                 <legend>App-Zugang</legend>
-                <p class="meta">Mit diesen Daten meldet sich der Patient in der CardioPulse-App an.{{ $editing ? ' Passwort leer lassen, um es nicht zu ändern.' : '' }}</p>
+                <p class="meta">Mit diesen Daten meldet sich der Patient in der CardioPulse-App an. Passwort: mindestens 8 Zeichen mit Buchstaben und Ziffern.{{ $editing ? ' Passwort leer lassen, um es nicht zu ändern.' : '' }}</p>
                 <div class="form-grid">
                     <div class="field">
                         <label class="field__label" for="email">E-Mail</label>

@@ -46,7 +46,7 @@
                 </a>
                 <span class="h-top__context">{{ session('department_label', 'Telemonitoring') }} · Patienten zu Hause</span>
                 <span class="live tabular" aria-live="off">LIVE <span data-clock>{{ now()->format('H:i:s') }}</span></span>
-                <span class="user-chip"><span class="avatar" aria-hidden="true">{{ $user->initials() }}</span><span>{{ $user->shortName() }}</span></span>
+                <a class="user-chip" href="{{ route('account.edit') }}" title="Mein Konto: Passwort und PIN ändern" @if ($active === 'account') aria-current="page" @endif><span class="avatar" aria-hidden="true">{{ $user->initials() }}</span><span class="user-chip__name">{{ $user->shortName() }}</span><span class="sr-only"> – Mein Konto</span></a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="h-top__logout" title="Abmelden"><x-icon name="log-out" size="18" /><span class="sr-only">Abmelden</span></button>

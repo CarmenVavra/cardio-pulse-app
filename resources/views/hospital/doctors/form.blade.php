@@ -48,7 +48,7 @@
             <fieldset class="form-section">
                 <legend>Zugang zum Überwachungsscreen</legend>
                 <p class="meta">
-                    Benutzerkennung und Passwort für die Anmeldung, 6-stellige PIN zum Entsperren des Privacy-Locks.
+                    Benutzerkennung und Passwort für die Anmeldung, 6-stellige PIN zum Entsperren des Privacy-Locks. Passwort: mindestens 8 Zeichen mit Buchstaben und Ziffern.
                     {{ $editing ? 'Passwort und PIN leer lassen, um sie nicht zu ändern.' : '' }}
                 </p>
                 <div class="form-grid">

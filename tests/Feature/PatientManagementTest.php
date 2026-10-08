@@ -137,11 +137,11 @@ class PatientManagementTest extends TestCase
 
         $this->actingAs($doctor)->put(route('patients.update', $patient), $this->payload($doctor, [
             'email' => $patient->user->email,
-            'password' => 'neues-passwort',
-            'password_confirmation' => 'neues-passwort',
+            'password' => 'neues-passwort-1',
+            'password_confirmation' => 'neues-passwort-1',
         ]))->assertRedirect();
 
-        $this->assertTrue(Hash::check('neues-passwort', $patient->user->fresh()->password));
+        $this->assertTrue(Hash::check('neues-passwort-1', $patient->user->fresh()->password));
     }
 
     public function test_patient_cannot_manage_patients(): void

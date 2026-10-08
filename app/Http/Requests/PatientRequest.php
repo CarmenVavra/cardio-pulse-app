@@ -44,7 +44,7 @@ class PatientRequest extends FormRequest
             'gp_name' => ['nullable', 'string', 'max:100'],
             'doctor_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', UserRole::Staff->value)->whereNull('deleted_at')],
             'email' => ['required', 'email', 'max:200', Rule::unique('users', 'email')->ignore($userId)],
-            'password' => [$userId ? 'nullable' : 'required', 'confirmed', Password::min(8)],
+            'password' => [$userId ? 'nullable' : 'required', 'confirmed', Password::defaults()],
         ];
     }
 

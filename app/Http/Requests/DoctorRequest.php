@@ -39,7 +39,7 @@ class DoctorRequest extends FormRequest
             'email' => ['required', 'email', 'max:200', Rule::unique('users', 'email')->ignore($id)],
             'phone' => ['nullable', 'string', 'max:40', 'regex:/^[0-9+()\/\s-]{5,}$/'],
             'available_until' => ['nullable', 'date_format:H:i'],
-            'password' => [$creating ? 'required' : 'nullable', 'confirmed', Password::min(8)],
+            'password' => [$creating ? 'required' : 'nullable', 'confirmed', Password::defaults()],
             'pin' => [$creating ? 'required' : 'nullable', 'digits:6'],
         ];
     }

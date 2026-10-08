@@ -98,9 +98,12 @@
             </div>
         </section>
 
-        <form method="POST" action="{{ route('logout') }}" class="push-down">
-            @csrf
-            <button type="submit" class="link-button" style="font-size:13px">Abmelden</button>
-        </form>
+        <div class="push-down home-account-links">
+            <a class="link-button" href="{{ route('patient.account.edit') }}">Mein Konto · Passwort ändern</a>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="link-button">Abmelden</button>
+            </form>
+        </div>
     </div>
 </x-layouts.patient>

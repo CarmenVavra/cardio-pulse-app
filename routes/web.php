@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\PatientLoginController;
 use App\Http\Controllers\Auth\StaffLoginController;
+use App\Http\Controllers\Hospital\AccountController;
 use App\Http\Controllers\Hospital\AlarmController;
 use App\Http\Controllers\Hospital\BoardController;
 use App\Http\Controllers\Hospital\CallController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Hospital\MessageController;
 use App\Http\Controllers\Hospital\MonthlyReportController;
 use App\Http\Controllers\Hospital\PatientController;
 use App\Http\Controllers\Hospital\PrivacyLockController;
+use App\Http\Controllers\Patient\AccountController as PatientAccountController;
 use App\Http\Controllers\Patient\CallController as PatientCallController;
 use App\Http\Controllers\Patient\DoctorController;
 use App\Http\Controllers\Patient\HomeController;
@@ -91,6 +93,10 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
         Route::post('/anrufe/{call}/beenden', [CallController::class, 'end'])->name('calls.end');
         Route::put('/anrufe/{call}/notiz', [CallController::class, 'note'])->name('calls.note');
 
+        Route::get('/konto', [AccountController::class, 'edit'])->name('account.edit');
+        Route::put('/konto/passwort', [AccountController::class, 'updatePassword'])->middleware('throttle:6,1')->name('account.password');
+        Route::put('/konto/pin', [AccountController::class, 'updatePin'])->middleware('throttle:6,1')->name('account.pin');
+
         Route::post('/demo/upload', DemoUploadController::class)->name('demo.upload');
     });
 });
@@ -114,6 +120,9 @@ Route::prefix('app')->name('patient.')->middleware(['auth', 'role:patient'])->gr
     Route::get('/monat/{month}/pdf', [MonthController::class, 'print'])->where('month', '\d{4}-\d{2}')->name('month.print');
 
     Route::get('/arzt', [DoctorController::class, 'index'])->name('doctor');
+
+    Route::get('/konto', [PatientAccountController::class, 'edit'])->name('account.edit');
+    Route::put('/konto/passwort', [PatientAccountController::class, 'updatePassword'])->middleware('throttle:6,1')->name('account.password');
     Route::post('/nachrichten', [PatientMessageController::class, 'store'])->middleware('throttle:20,1')->name('messages.store');
 
     Route::get('/medikation', [PatientMedicationController::class, 'index'])->name('medications.index');
