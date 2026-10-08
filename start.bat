@@ -12,10 +12,16 @@ if %errorlevel%==0 (
     goto open
 )
 
-if not exist vendor\autoload.php (
-    echo Installiere PHP-Abhaengigkeiten ...
-    call composer install --no-interaction
-)
+REM Abhaengigkeiten bei jedem Start mit composer.lock / package-lock.json abgleichen,
+REM damit nach einem git pull neue oder aktualisierte Pakete installiert werden.
+REM Ohne Aenderungen dauert das nur wenige Sekunden.
+echo Pruefe PHP-Abhaengigkeiten ...
+call composer install --no-interaction --no-progress
+if errorlevel 1 goto failed
+
+echo Pruefe JavaScript-Abhaengigkeiten ...
+call npm install --no-audit --no-fund
+if errorlevel 1 goto failed
 
 if not exist .env (
     copy .env.example .env >nul
@@ -29,11 +35,12 @@ if not exist database\database.sqlite (
 ) else (
     php artisan migrate --force
 )
+if errorlevel 1 goto failed
 
 REM Assets bei jedem Start bauen, damit nach einem git pull kein veraltetes CSS/JS ausgeliefert wird.
-if not exist node_modules call npm install
 echo Baue Frontend-Assets ...
 call npm run build
+if errorlevel 1 goto failed
 
 echo Starte CardioPulse auf http://127.0.0.1:%PORT% ...
 start "CardioPulse Server" /min php artisan serve --host=127.0.0.1 --port=%PORT%
@@ -42,3 +49,11 @@ timeout /t 2 /nobreak >nul
 :open
 start "" "http://127.0.0.1:%PORT%"
 endlocal
+exit /b 0
+
+:failed
+echo.
+echo Start abgebrochen - bitte die Fehlermeldung oben pruefen.
+pause
+endlocal
+exit /b 1
