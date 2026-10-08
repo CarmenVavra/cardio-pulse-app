@@ -33,10 +33,10 @@ Umsetzung nach `CardioPulse_Projektkonzept.pdf` und den Mockups in `UI_MOCKUPS/`
 
 ## Starten / Stoppen
 
-- `start.bat` – installiert bei Bedarf Abhängigkeiten, legt die DB mit Demo-Daten an bzw. führt neue Migrationen aus, baut die Assets und startet den Server auf **http://127.0.0.1:8700**
+- `start.bat` – gleicht PHP- und npm-Pakete ab, legt die DB mit Demo-Daten an bzw. führt neue Migrationen aus, baut die Assets und startet den Server auf **http://127.0.0.1:8700**; bricht bei Fehlern mit Meldung ab
 - `stop.bat` – beendet den Server auf Port 8700
 
-Nach einem `git pull` genügt `start.bat` – neue Migrationen und geänderte Assets werden dabei automatisch übernommen.
+Nach einem `git pull` genügt `start.bat` – neue Pakete, Migrationen und geänderte Assets werden dabei automatisch übernommen.
 Ohne `start.bat`: `composer install`, `npm install`, `php artisan migrate`, `npm run build`.
 
 ## Adressen
@@ -70,6 +70,7 @@ Demo-Daten neu erzeugen: `php artisan migrate:fresh --seed`
 | **Monatsberichte** | Eingegangene Berichte je Monat mit Verlauf des Berichtsmonats |
 | **Anrufe** (D5) | Arzt ↔ Patient in beide Richtungen inkl. Klingeln, Annehmen/Ablehnen, Gesprächsdauer, Gesprächsnotiz |
 | **Ärzte** | Anlegen, Bearbeiten (Profil, Benutzerkennung, Passwort, PIN), Löschen mit Übergabe der Patienten an einen anderen Arzt; eigenes Konto und letzter Arzt sind geschützt |
+| **Mein Konto** (Klick auf den eigenen Namen oben rechts) | Eigenes Passwort und Privacy-Lock-PIN ändern |
 
 ### Patienten-App
 
@@ -80,6 +81,7 @@ Demo-Daten neu erzeugen: `php artisan migrate:fresh --seed`
 | **Monat** (M5) | Monatskalender, Versand an das Krankenhaus (erneut senden möglich), PDF für den Hausarzt |
 | **Arzt** (M6/M7) | Anruf an Arzt oder Zentrale, eingehende Anrufe, **Chat mit der Klinik** (Nachrichten lesen und beantworten, Lesebestätigung) |
 | **Medikation** | Eigene Medikation erfassen, bearbeiten, löschen |
+| **Mein Konto** (Link auf der Startseite) | Passwort ändern, Abmelden |
 
 ### Löschen und Nachverfolgbarkeit
 
@@ -88,6 +90,21 @@ aber Messwerte, Alarm-Quittierungen, Anrufe und Audit-Log bleiben erhalten (Aufb
 Benutzerkennungen und E-Mail-Adressen gelöschter Konten bleiben deshalb reserviert.
 
 Alle sicherheitsrelevanten Aktionen (Alarm quittieren, Export, Anlegen/Ändern/Löschen, Nachrichten) werden im Audit-Log (`audit_logs`) protokolliert.
+
+### Sicherheit
+
+| Maßnahme | Umsetzung |
+|---|---|
+| Passwort-Raten | Nach 5 Fehlversuchen ist die Anmeldung für dieses Konto (je IP-Adresse) 5 Minuten gesperrt; zusätzlich max. 10 Login-Anfragen pro Minute je IP |
+| Privacy-Lock-PIN | Nach 5 falschen PINs wird die Sitzung beendet; die Meldung zeigt die verbleibenden Versuche |
+| Passwörter | Einheitlich mind. 8 Zeichen mit Buchstaben und Ziffern (Anlegen, Bearbeiten, eigenes Konto); beim Ändern ist das aktuelle Passwort nötig und alle anderen Sitzungen werden abgemeldet |
+| PIN ändern | Passwort nötig; triviale PINs (z. B. 123456, 111111) werden abgelehnt |
+| Sitzungen | Datenbank-Sessions, verschlüsselt (`SESSION_ENCRYPT=true`), Abmeldung nach 120 Min ohne Anfrage |
+| HTTP-Header | `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`; HSTS bei HTTPS |
+| HTTPS | Im Produktivbetrieb (`APP_ENV=production`) werden alle Links auf HTTPS erzeugt |
+| Audit-Log | Anmeldungen, Fehlversuche, Sperren, Passwort- und PIN-Änderungen werden protokolliert |
+
+Validierungsmeldungen sind deutsch (`lang/de/validation.php`).
 
 ### Demo-Modus
 
@@ -99,13 +116,41 @@ Alle sicherheitsrelevanten Aktionen (Alarm quittieren, Export, Anlegen/Ändern/L
 - Anrufe: Signalisierung und Status sind umgesetzt, der **Sprachkanal (WebRTC/VoIP)** ist nicht angebunden.
 - **Video-Sprechstunden** mit Terminvergabe (FHIR `Appointment`) und FHIR `Encounter` fehlen noch; der FHIR-Export ist ein Download, keine REST-API mit SMART on FHIR / OAuth 2.0.
 - Keine eigene **Admin-Rolle**: Jeder angemeldete Arzt darf Ärzte verwalten.
-- Kein **Passwort ändern / Passwort vergessen** für Patienten und Ärzte.
+- Kein **Passwort vergessen** (Zurücksetzen per E-Mail) – Ärzte können Passwörter anderer Ärzte unter „Ärzte“ neu setzen, Patienten-Passwörter unter „Patienten bearbeiten“.
 - Der Chat ist **kein Notfallkanal** – die App weist auf 112 hin.
 - Bluetooth-Import und Foto-Scan (OCR) sind nur in nativen Apps sinnvoll – in der Web-App erscheint ein Hinweis.
 - Hypotonie wird **blau** dargestellt („Blue Ice“ laut Konzept, für WCAG-AA-Kontrast mit weißer Schrift leicht abgedunkelt: `#0277BD` statt `#0288D1`). Das Mockup sah weiß vor – das war zu unauffällig.
 - Bereich 130–139 / 85–89 ist im Konzept undefiniert und wird als Gelb-Orange gewertet – **mit medizinischer Leitung abstimmen**.
 - Mikro-Labels sind 12 px statt 11 px (Mindestschriftgröße laut CLAUDE.md).
-- Für den Produktivbetrieb: HTTPS erzwingen, `SESSION_ENCRYPT=true`, `APP_DEBUG=false`, `CARDIOPULSE_DEMO=false`.
+
+## Produktivbetrieb (z. B. netcup)
+
+Checkliste für das Hosting:
+
+1. **Document Root** auf den Ordner `public/` setzen (nie auf das Projektverzeichnis).
+2. PHP **8.2 oder neuer** mit den Laravel-Standarderweiterungen (`mbstring`, `openssl`, `pdo_sqlite` bzw. `pdo_mysql`, `tokenizer`, `xml`, `ctype`, `fileinfo`).
+3. `.env` aus `.env.example` erstellen und anpassen:
+   - `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://…`, `php artisan key:generate`
+   - `CARDIOPULSE_DEMO=false` (kein Demo-Upload auf dem Board)
+   - `SESSION_ENCRYPT=true`, `SESSION_SECURE_COOKIE=true`
+   - Datenbank: SQLite (`database/database.sqlite`, Ordner beschreibbar) oder MySQL/MariaDB über `DB_CONNECTION=mysql` und `DB_*`
+   - `TRUSTED_PROXIES` nur setzen, wenn ein Reverse-Proxy/Load-Balancer vorgeschaltet ist (sonst leer lassen)
+4. SSL-Zertifikat aktivieren (z. B. Let's Encrypt im Hosting-Panel) und HTTP auf HTTPS umleiten.
+5. Deployment:
+
+   ```bash
+   composer install --no-dev --optimize-autoloader
+   npm ci && npm run build
+   php artisan migrate --force
+   php artisan config:cache && php artisan route:cache && php artisan view:cache
+   ```
+
+6. Schreibrechte für `storage/` und `bootstrap/cache/`.
+7. **Keine Demo-Daten** einspielen (`--seed` weglassen) und den ersten Arzt-Zugang anlegen – danach legt dieser alle weiteren Ärzte und Patienten in der App an:
+
+   ```bash
+   php artisan cardiopulse:create-doctor
+   ```
 
 ## Qualitätssicherung
 
