@@ -56,8 +56,8 @@ class MonitoringBoard
 
     public function uploadsToday(): int
     {
-        return Measurement::query()->where('measured_at', '>=', today())->count()
-            + MonthlyReport::query()->where('sent_at', '>=', today())->count();
+        return Measurement::query()->whereHas('patient')->where('measured_at', '>=', today())->count()
+            + MonthlyReport::query()->whereHas('patient')->where('sent_at', '>=', today())->count();
     }
 
     private function row(Patient $patient): BoardRow

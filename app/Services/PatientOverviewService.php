@@ -16,7 +16,7 @@ class PatientOverviewService
     public function build(Patient $patient, Carbon $from, Carbon $to): PatientOverview
     {
         $patient->loadMissing([
-            'medications',
+            'medications.updatedBy',
             'latestMeasurement',
             'latestAlarm.acknowledgedBy',
             'latestMonthlyReport',

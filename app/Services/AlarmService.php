@@ -18,6 +18,7 @@ class AlarmService
     {
         return Alarm::query()
             ->open()
+            ->whereHas('patient')
             ->with(['patient', 'measurement'])
             ->orderBy('triggered_at')
             ->get();
@@ -31,6 +32,7 @@ class AlarmService
         return Alarm::query()
             ->whereNotNull('acknowledged_at')
             ->where('acknowledged_at', '>=', now()->subMinutes(15))
+            ->whereHas('patient')
             ->with(['patient', 'acknowledgedBy'])
             ->latest('acknowledged_at')
             ->first();

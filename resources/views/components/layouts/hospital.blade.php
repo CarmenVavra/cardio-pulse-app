@@ -28,7 +28,7 @@
     <header class="h-top">
         <x-logo :href="route('board')" />
         @unless ($locked)
-            <nav aria-label="Hauptnavigation">
+            <nav class="h-nav" aria-label="Hauptnavigation">
                 <ul class="h-tabs">
                     @foreach ($tabs as $key => [$label, $url])
                         <li><a href="{{ $url }}" @if ($active === $key) aria-current="page" @endif>{{ $label }}</a></li>

@@ -8,15 +8,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
+ * Gelöschte Patienten werden nur ausgeblendet (Soft Delete): Die Behandlungsdokumentation
+ * unterliegt der Aufbewahrungspflicht (§ 630f BGB, 10 Jahre).
+ *
  * @property Carbon $birth_date
+ * @property Carbon|null $deleted_at
  */
 class Patient extends Model
 {
     /** @use HasFactory<PatientFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * @var list<string>

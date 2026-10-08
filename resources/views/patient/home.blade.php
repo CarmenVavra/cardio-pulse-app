@@ -83,15 +83,20 @@
             </p>
         </section>
 
-        @if ($patient->medications->isNotEmpty())
-            <section class="card" aria-labelledby="meds-title">
-                <div class="list-head"><h2 id="meds-title" style="font-size:13px;font-weight:600;letter-spacing:0">Medikation · Erinnerung</h2><x-icon name="pill" size="16" /></div>
-                @foreach ($patient->medications as $medication)
-                    <div class="med-row" style="padding:10px 16px;border-top:1px solid var(--sand);border-bottom:0"><span><b>{{ $medication->name }}</b> {{ $medication->dose }}</span><span>{{ $medication->schedule }}</span></div>
-                @endforeach
-                <p class="meta" style="font-size:12px;padding:0 16px 12px">Schema: morgens – mittags – abends</p>
-            </section>
-        @endif
+        <section class="card" aria-labelledby="meds-title">
+            <div class="list-head">
+                <h2 id="meds-title" class="med-home-title"><x-icon name="pill" size="16" />Medikation · Erinnerung</h2>
+            </div>
+            @forelse ($patient->medications as $medication)
+                <div class="med-row med-row--home"><span><b>{{ $medication->name }}</b> {{ $medication->dose }}</span><span class="tabular">{{ $medication->schedule }}</span></div>
+            @empty
+                <p class="meta med-home-empty">Noch keine Medikation erfasst.</p>
+            @endforelse
+            <div class="med-home-foot">
+                <span class="meta">Schema: morgens – mittags – abends</span>
+                <a class="btn btn--outline btn--sm" href="{{ route('patient.medications.index') }}">Bearbeiten<span class="sr-only"> – Medikation</span></a>
+            </div>
+        </section>
 
         <form method="POST" action="{{ route('logout') }}" class="push-down">
             @csrf

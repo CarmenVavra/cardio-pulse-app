@@ -1,7 +1,10 @@
 <x-layouts.hospital :title="$overview->patient->fullName()" active="patients">
     <div class="detail-grid">
         <nav class="side-list" aria-label="Patientenliste">
-            <div class="side-list__head"><span class="micro">Patienten zu Hause · {{ $rows->count() }}</span></div>
+            <div class="side-list__head">
+                <span class="micro">Patienten zu Hause · {{ $rows->count() }}</span>
+                <a class="btn btn--primary btn--sm" href="{{ route('patients.create') }}"><x-icon name="plus" size="14" stroke="2.6" />Patient anlegen</a>
+            </div>
             <ul>
                 @foreach ($rows as $row)
                     <li>

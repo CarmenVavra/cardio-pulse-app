@@ -32,6 +32,7 @@
             </form>
             <button type="button" class="btn btn--outline" data-dialog-open="message-dialog"><span class="btn__lead"><x-icon name="message-square" size="18" />Nachricht</span></button>
             <a class="btn btn--outline" href="{{ route('patients.report', [$patient, ...$exportQuery]) }}"><span class="btn__lead"><x-icon name="file-text" size="18" />PDF / KIS-Export</span></a>
+            <a class="btn btn--outline" href="{{ route('patients.edit', $patient) }}">Bearbeiten<span class="sr-only">: {{ $patient->fullName() }}</span></a>
         </div>
     </header>
 
@@ -85,11 +86,12 @@
         </section>
         <section aria-labelledby="meds-title">
             <h2 id="meds-title">Medikation</h2>
-            @forelse ($patient->medications as $medication)
-                <div class="med-row"><span><b>{{ $medication->name }}</b> {{ $medication->dose }}</span><span>{{ $medication->schedule }}</span></div>
-            @empty
-                <p class="meta">Keine Medikation hinterlegt.</p>
-            @endforelse
+            <p class="meta">Schema: morgens – mittags – abends</p>
+            <x-medication-list :patient="$patient" :routes="[
+                'store' => route('patients.medications.store', $patient),
+                'update' => fn ($medication) => route('patients.medications.update', [$patient, $medication]),
+                'destroy' => fn ($medication) => route('patients.medications.destroy', [$patient, $medication]),
+            ]" />
         </section>
     </div>
 </section>

@@ -21,6 +21,7 @@ class MonthlyReportController extends Controller
 
         $reports = MonthlyReport::query()
             ->whereDate('month', $month->toDateString())
+            ->whereHas('patient')
             ->with('patient')
             ->get()
             ->sortBy(fn (MonthlyReport $report) => ($report->worst_status?->sortOrder() ?? 9).'-'.$report->patient->last_name)

@@ -604,11 +604,19 @@ table {
     font-size: 20px;
 }
 
+.h-nav {
+    display: flex;
+}
+
 .h-tabs {
     display: flex;
     margin: 0;
     padding: 0;
     list-style: none;
+}
+
+.h-tabs li {
+    display: flex;
 }
 
 .h-tabs a {
@@ -642,6 +650,13 @@ table {
 
 .h-top__context {
     color: var(--sand);
+    white-space: nowrap;
+}
+
+@media (max-width: 1240px) {
+    .h-top__context {
+        display: none;
+    }
 }
 
 .live {
@@ -2702,7 +2717,7 @@ table {
         min-height: 52px;
     }
 
-    .h-tabs {
+    .h-nav {
         order: 3;
         width: 100%;
         overflow-x: auto;
@@ -3056,4 +3071,261 @@ table {
     width: min(440px, calc(100vw - 32px));
     z-index: 70;
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================================================
+   Medikation (Arzt & Patient) und Patientenformular
+   ========================================================================== */
+
+.med-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.med-item {
+    border-bottom: var(--row-rule);
+}
+
+.med-item[open] {
+    background: var(--ground);
+}
+
+.med-item__summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 12px;
+    align-items: center;
+    min-height: 44px;
+    padding: 7px 4px;
+    font-size: 14px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.med-item__summary::-webkit-details-marker {
+    display: none;
+}
+
+.med-item__summary:hover .med-item__toggle {
+    text-decoration: underline;
+}
+
+.med-item__toggle {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--navy);
+    border: 2px solid var(--navy);
+    padding: 4px 8px;
+}
+
+.med-item[open] .med-item__toggle {
+    background: var(--navy);
+    color: var(--ground);
+}
+
+.med-flag {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 2px 6px;
+    background: var(--amber-tint);
+    color: var(--amber-fg);
+}
+
+.med-flag--staff {
+    background: var(--surface);
+    color: var(--muted);
+    box-shadow: inset 0 0 0 1px var(--sand);
+}
+
+.med-empty {
+    padding: 8px 0;
+}
+
+.med-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 4px 16px;
+}
+
+.med-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 12px;
+}
+
+.med-fields .input,
+.med-fields .select {
+    min-height: 44px;
+    font-size: 15px;
+}
+
+.med-fields__schedule {
+    grid-column: 1 / -1;
+}
+
+.med-schedule {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.med-schedule .meta {
+    font-weight: 600;
+}
+
+.med-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.btn--danger-outline {
+    border-color: var(--red);
+    color: var(--red-fg);
+}
+
+.btn--danger-outline:hover:not([disabled]) {
+    background: var(--red-tint);
+    color: var(--red-fg);
+}
+
+.med-add {
+    margin-top: 12px;
+}
+
+.med-add > summary {
+    list-style: none;
+    gap: 8px;
+    justify-content: flex-start;
+}
+
+.med-add > summary::-webkit-details-marker {
+    display: none;
+}
+
+.med-add[open] > summary {
+    background: var(--sand);
+}
+
+.med-home-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px 12px;
+    border-top: var(--row-rule);
+}
+
+.med-schema-hint {
+    margin-bottom: 4px;
+}
+
+.p-head__h1 {
+    font-size: 20px;
+}
+
+.side-list__head .btn--sm {
+    min-height: 30px;
+    padding: 0 10px;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.form-page {
+    max-width: 980px;
+}
+
+.form-section {
+    border: 0;
+    border-top: var(--rule);
+    margin: 0;
+    padding: 16px 0 0;
+    min-width: 0;
+}
+
+.form-section legend {
+    font-size: 18px;
+    font-weight: 800;
+    padding: 0 12px 0 0;
+}
+
+.form-section > .meta {
+    margin-bottom: 12px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px 20px;
+    margin-top: 8px;
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+@media (max-width: 640px) {
+    .med-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .med-item__summary {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .med-item__toggle {
+        grid-column: 1 / -1;
+        justify-self: start;
+    }
+}
+
+.danger-zone {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 16px;
+    padding: 20px;
+    border: 2px solid var(--red);
+    border-left-width: 8px;
+    background: var(--red-row);
+}
+
+.danger-zone h2 {
+    font-size: 18px;
+    color: var(--red-fg);
+}
+
+.danger-zone .input {
+    background: #fff;
+}
+
+/* Medikationskarte auf der Patienten-Startseite (M1) */
+
+.med-home-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+
+.med-row--home {
+    padding: 10px 16px;
+    border-top: var(--row-rule);
+    border-bottom: 0;
+}
+
+.med-row--home > span:last-child {
+    text-align: right;
+}
+
+.med-home-empty {
+    padding: 0 16px 8px;
 }

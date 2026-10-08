@@ -57,6 +57,7 @@ class BoardSnapshot
             ->where('direction', CallDirection::ToClinic)
             ->where('status', CallStatus::Ringing)
             ->where('created_at', '>=', now()->subMinutes(5))
+            ->whereHas('patient')
             ->with('patient')
             ->oldest()
             ->first();

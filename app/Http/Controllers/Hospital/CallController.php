@@ -20,9 +20,10 @@ class CallController extends Controller
 {
     public function index(): View
     {
-        $openCalls = Call::query()->open()->with(['patient', 'user'])->latest()->get();
+        $openCalls = Call::query()->open()->whereHas('patient')->with(['patient', 'user'])->latest()->get();
         $recentCalls = Call::query()
             ->whereNotIn('id', $openCalls->modelKeys())
+            ->whereHas('patient')
             ->with(['patient', 'user'])
             ->latest()
             ->limit(25)
@@ -41,6 +42,8 @@ class CallController extends Controller
     public function show(Call $call): View
     {
         $call->load(['patient', 'user', 'measurement']);
+
+        abort_if($call->patient === null, 404, 'Patient wurde gelöscht.');
 
         $todayMeasurements = $call->patient->measurements()
             ->where('measured_at', '>=', today())

@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PatientLoginRequest;
 use App\Models\AuditLog;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -26,6 +27,8 @@ class PatientLoginController extends Controller
             'email' => $request->validated('email'),
             'password' => $request->validated('password'),
             'role' => UserRole::Patient->value,
+            // Gelöschte Patienten (Soft Delete) können sich nicht mehr anmelden.
+            fn (Builder $query) => $query->whereHas('patient'),
         ];
 
         if (! Auth::attempt($credentials, remember: true)) {

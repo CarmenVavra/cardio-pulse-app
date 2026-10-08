@@ -8,6 +8,7 @@ use App\Http\Controllers\Hospital\BoardController;
 use App\Http\Controllers\Hospital\CallController;
 use App\Http\Controllers\Hospital\DemoUploadController;
 use App\Http\Controllers\Hospital\ExportController;
+use App\Http\Controllers\Hospital\MedicationController;
 use App\Http\Controllers\Hospital\MessageController;
 use App\Http\Controllers\Hospital\MonthlyReportController;
 use App\Http\Controllers\Hospital\PatientController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Patient\CallController as PatientCallController;
 use App\Http\Controllers\Patient\DoctorController;
 use App\Http\Controllers\Patient\HomeController;
 use App\Http\Controllers\Patient\MeasurementController;
+use App\Http\Controllers\Patient\MedicationController as PatientMedicationController;
 use App\Http\Controllers\Patient\MonthController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,7 +56,18 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
         Route::post('/alarme/{alarm}/quittieren', [AlarmController::class, 'acknowledge'])->name('alarms.acknowledge');
 
         Route::get('/patienten', [PatientController::class, 'index'])->name('patients.index');
+        Route::get('/patienten/neu', [PatientController::class, 'create'])->name('patients.create');
+        Route::post('/patienten', [PatientController::class, 'store'])->name('patients.store');
         Route::get('/patienten/{patient}', [PatientController::class, 'show'])->name('patients.show');
+        Route::get('/patienten/{patient}/bearbeiten', [PatientController::class, 'edit'])->name('patients.edit');
+        Route::put('/patienten/{patient}', [PatientController::class, 'update'])->name('patients.update');
+        Route::delete('/patienten/{patient}', [PatientController::class, 'destroy'])->name('patients.destroy');
+
+        Route::scopeBindings()->group(function () {
+            Route::post('/patienten/{patient}/medikation', [MedicationController::class, 'store'])->name('patients.medications.store');
+            Route::put('/patienten/{patient}/medikation/{medication}', [MedicationController::class, 'update'])->name('patients.medications.update');
+            Route::delete('/patienten/{patient}/medikation/{medication}', [MedicationController::class, 'destroy'])->name('patients.medications.destroy');
+        });
         Route::get('/patienten/{patient}/fhir', [ExportController::class, 'fhir'])->name('patients.fhir');
         Route::get('/patienten/{patient}/bericht', [ExportController::class, 'report'])->name('patients.report');
         Route::post('/patienten/{patient}/nachrichten', [MessageController::class, 'store'])->name('patients.messages.store');
@@ -92,6 +105,11 @@ Route::prefix('app')->name('patient.')->middleware(['auth', 'role:patient'])->gr
     Route::get('/monat/{month}/pdf', [MonthController::class, 'print'])->where('month', '\d{4}-\d{2}')->name('month.print');
 
     Route::get('/arzt', [DoctorController::class, 'index'])->name('doctor');
+
+    Route::get('/medikation', [PatientMedicationController::class, 'index'])->name('medications.index');
+    Route::post('/medikation', [PatientMedicationController::class, 'store'])->name('medications.store');
+    Route::put('/medikation/{medication}', [PatientMedicationController::class, 'update'])->name('medications.update');
+    Route::delete('/medikation/{medication}', [PatientMedicationController::class, 'destroy'])->name('medications.destroy');
 
     Route::post('/anrufe', [PatientCallController::class, 'store'])->name('calls.store');
     Route::get('/anrufe/aktiv', [PatientCallController::class, 'active'])->name('calls.active');

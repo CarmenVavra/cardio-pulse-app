@@ -121,7 +121,7 @@ class DatabaseSeeder extends Seeder
             ]);
 
             foreach (self::MEDICATIONS[$index] as [$medName, $dose, $schedule]) {
-                $patient->medications()->create(['name' => $medName, 'dose' => $dose, 'schedule' => $schedule]);
+                $patient->medications()->create(['name' => $medName, 'dose' => $dose, 'schedule' => $schedule, 'updated_by' => $doctor->id]);
             }
 
             $uploadAt = $now->copy()->subMinutes($offset);

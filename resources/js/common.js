@@ -73,6 +73,15 @@ export const formatDuration = (seconds, withHours = false) => {
  * Drucken-Buttons und <dialog>-Steuerung.
  */
 export function initCommon() {
+    // Sicherheitsabfrage vor endgültigen Aktionen (z. B. Medikament löschen)
+    document.addEventListener('submit', (event) => {
+        const message = event.target.dataset?.confirm;
+        if (message && !window.confirm(message)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+        }
+    });
+
     document.addEventListener('click', (event) => {
         if (event.target.closest('[data-print]')) {
             window.print();
