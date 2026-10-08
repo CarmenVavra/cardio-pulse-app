@@ -103,7 +103,7 @@ jobs:
           upload-artifact: false
           upload-release-assets: false
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: sbom-cyclonedx
           path: cardiopulse-sbom.cdx.json
