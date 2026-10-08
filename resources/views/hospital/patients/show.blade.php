@@ -13,7 +13,7 @@
                            @if ($row->patient->is($overview->patient)) aria-current="page" @endif>
                             <span class="stripe"></span>
                             <span class="side-item__text">
-                                <span class="side-item__name">{{ $row->patient->fullName() }}</span>
+                                <span class="side-item__name">{{ $row->patient->fullName() }}@if ($row->unreadMessages) <span class="msg-badge"><x-icon name="message-square" size="12" stroke="2.4" />{{ $row->unreadMessages }}<span class="sr-only"> {{ $row->unreadMessages === 1 ? 'neue Nachricht' : 'neue Nachrichten' }}</span></span>@endif</span>
                                 <span class="side-item__meta">{{ $row->patient->patient_number }} · {{ $row->uploadedAt ? \App\Support\Format::ago($row->uploadedAt) : '—' }}</span>
                             </span>
                             <span class="side-item__bp bp">{{ $row->measurement?->reading() ?? '—' }}</span>

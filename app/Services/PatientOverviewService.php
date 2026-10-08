@@ -9,10 +9,14 @@ use App\Support\TrendChart;
 use Illuminate\Support\Carbon;
 
 /**
- * Detailansicht (Patient / Monatsbericht) mit 30-Tage-Verlauf, Kennzahlen und Medikation.
+ * Detailansicht (Patient / Monatsbericht) mit 30-Tage-Verlauf, Kennzahlen, Medikation und Nachrichten.
  */
 class PatientOverviewService
 {
+    public const MESSAGE_LIMIT = 10;
+
+    public function __construct(private readonly MessageService $messages) {}
+
     public function build(Patient $patient, Carbon $from, Carbon $to): PatientOverview
     {
         $patient->loadMissing([
@@ -39,6 +43,7 @@ class PatientOverviewService
             stats: MeasurementStats::from($measurements),
             chart: new TrendChart($measurements, $from, $to),
             recentUploads: $recent,
+            messages: $this->messages->thread($patient, self::MESSAGE_LIMIT),
         );
     }
 }

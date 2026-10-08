@@ -16,6 +16,9 @@
                     <span class="masked" role="img" aria-label="Name ausgeblendet"></span>
                 @else
                     <a href="{{ route('patients.show', $patient) }}">{{ $patient->fullName() }}</a>
+                    @if ($row->unreadMessages)
+                        <a class="msg-badge" href="{{ route('patients.show', $patient) }}#nachrichten"><x-icon name="message-square" size="12" stroke="2.4" />{{ $row->unreadMessages }}<span class="sr-only"> {{ $row->unreadMessages === 1 ? 'neue Nachricht' : 'neue Nachrichten' }} von {{ $patient->fullName() }}</span></a>
+                    @endif
                     <span class="board-row__meta">{{ $patient->age() }} J. · zu Hause · {{ $patient->city }}</span>
                 @endif
             </div>

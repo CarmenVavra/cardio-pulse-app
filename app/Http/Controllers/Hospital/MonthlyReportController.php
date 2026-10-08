@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Hospital;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ReportIndexRequest;
 use App\Models\MonthlyReport;
+use App\Services\MessageService;
 use App\Services\PatientOverviewService;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
@@ -14,7 +15,7 @@ use Illuminate\View\View;
  */
 class MonthlyReportController extends Controller
 {
-    public function index(ReportIndexRequest $request, PatientOverviewService $overviews): View
+    public function index(ReportIndexRequest $request, PatientOverviewService $overviews, MessageService $messages): View
     {
         $latestMonth = MonthlyReport::query()->max('month');
         $month = ($request->month() ?? ($latestMonth ? Carbon::parse($latestMonth) : now()->subMonth()))->startOfMonth();
@@ -32,6 +33,10 @@ class MonthlyReportController extends Controller
         $overview = $selected
             ? $overviews->build($selected->patient, $month->copy(), $month->copy()->endOfMonth())
             : null;
+
+        if ($selected) {
+            $messages->markReadByClinic($selected->patient);
+        }
 
         $previousMonth = $month->copy()->subMonth();
         $nextMonth = $month->copy()->addMonth();

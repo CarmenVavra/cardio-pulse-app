@@ -288,5 +288,12 @@ class DatabaseSeeder extends Seeder
             'body' => 'Guten Tag Herr Brandner, bitte messen Sie morgen früh vor der Tabletteneinnahme erneut und tragen Sie den Wert in der App ein.',
             'created_at' => now()->subDay()->setTime(17, 20),
         ]);
+
+        $josef->messages()->create([
+            'user_id' => $josef->user_id,
+            'from_patient' => true,
+            'body' => 'Mache ich. Soll ich die Tablette am Abend trotzdem wie gewohnt nehmen?',
+            'created_at' => now()->subDay()->setTime(18, 5),
+        ]);
     }
 }

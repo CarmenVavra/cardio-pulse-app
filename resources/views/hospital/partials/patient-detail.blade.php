@@ -30,7 +30,7 @@
                 @csrf
                 <button type="submit" class="btn btn--primary"><span class="btn__lead"><x-icon name="phone" size="18" stroke="2.2" />Anrufen</span></button>
             </form>
-            <button type="button" class="btn btn--outline" data-dialog-open="message-dialog"><span class="btn__lead"><x-icon name="message-square" size="18" />Nachricht</span></button>
+            <a class="btn btn--outline" href="#nachrichten"><span class="btn__lead"><x-icon name="message-square" size="18" />Nachricht</span></a>
             <a class="btn btn--outline" href="{{ route('patients.report', [$patient, ...$exportQuery]) }}"><span class="btn__lead"><x-icon name="file-text" size="18" />PDF / KIS-Export</span></a>
             <a class="btn btn--outline" href="{{ route('patients.edit', $patient) }}">Bearbeiten<span class="sr-only">: {{ $patient->fullName() }}</span></a>
         </div>
@@ -94,21 +94,23 @@
             ]" />
         </section>
     </div>
-</section>
 
-<dialog class="dialog" id="message-dialog" aria-labelledby="message-dialog-title">
-    <form method="POST" action="{{ route('patients.messages.store', $patient) }}">
-        @csrf
-        <div class="dialog__head" id="message-dialog-title">Nachricht an {{ $patient->fullName() }}</div>
-        <div class="dialog__body">
-            <div class="field">
-                <label class="field__label" for="message-body">Nachricht (erscheint in der Patienten-App)</label>
-                <textarea class="textarea" id="message-body" name="body" rows="5" maxlength="2000" required placeholder="z. B. Bitte morgen früh vor der Tabletteneinnahme erneut messen."></textarea>
-            </div>
-            <div class="dialog__actions">
-                <button type="submit" class="btn btn--primary">Senden <span aria-hidden="true">→</span></button>
-                <button type="button" class="btn btn--outline" data-dialog-close>Abbrechen</button>
-            </div>
+    <section class="detail__chat" id="nachrichten" aria-labelledby="chat-title" tabindex="-1">
+        <h2 id="chat-title">Nachrichten</h2>
+        <div class="detail__chat-grid">
+            <x-message-thread :messages="$overview->messages" viewer="clinic" empty="Noch keine Nachrichten mit {{ $patient->fullName() }}." />
+
+            <form method="POST" action="{{ route('patients.messages.store', $patient) }}" class="chat-form" novalidate>
+                @csrf
+                <div class="field">
+                    <label class="field__label" for="message-body">Nachricht an {{ $patient->fullName() }} (erscheint in der Patienten-App)</label>
+                    <textarea class="textarea" id="message-body" name="body" rows="4" maxlength="2000" required
+                              placeholder="z. B. Bitte morgen früh vor der Tabletteneinnahme erneut messen."
+                              @error('body') aria-invalid="true" aria-describedby="message-error" @enderror>{{ old('body') }}</textarea>
+                    @error('body')<div class="field-error" id="message-error" role="alert">{{ $message }}</div>@enderror
+                </div>
+                <div><button type="submit" class="btn btn--primary">Senden <span aria-hidden="true">→</span></button></div>
+            </form>
         </div>
-    </form>
-</dialog>
+    </section>
+</section>

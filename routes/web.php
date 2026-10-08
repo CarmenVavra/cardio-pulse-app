@@ -19,6 +19,7 @@ use App\Http\Controllers\Patient\DoctorController;
 use App\Http\Controllers\Patient\HomeController;
 use App\Http\Controllers\Patient\MeasurementController;
 use App\Http\Controllers\Patient\MedicationController as PatientMedicationController;
+use App\Http\Controllers\Patient\MessageController as PatientMessageController;
 use App\Http\Controllers\Patient\MonthController;
 use Illuminate\Support\Facades\Route;
 
@@ -113,6 +114,7 @@ Route::prefix('app')->name('patient.')->middleware(['auth', 'role:patient'])->gr
     Route::get('/monat/{month}/pdf', [MonthController::class, 'print'])->where('month', '\d{4}-\d{2}')->name('month.print');
 
     Route::get('/arzt', [DoctorController::class, 'index'])->name('doctor');
+    Route::post('/nachrichten', [PatientMessageController::class, 'store'])->middleware('throttle:20,1')->name('messages.store');
 
     Route::get('/medikation', [PatientMedicationController::class, 'index'])->name('medications.index');
     Route::post('/medikation', [PatientMedicationController::class, 'store'])->name('medications.store');

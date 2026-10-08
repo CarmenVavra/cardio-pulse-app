@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * Nachricht der Klinik an den Patienten (Chat-Anweisung).
+ * Chat-Nachricht zwischen Klinik und Patient. read_at gilt für den jeweiligen Empfänger.
  *
+ * @property bool $from_patient
  * @property Carbon|null $read_at
  * @property Carbon $created_at
  */
@@ -20,6 +22,7 @@ class Message extends Model
     protected $fillable = [
         'patient_id',
         'user_id',
+        'from_patient',
         'body',
         'read_at',
     ];
@@ -30,6 +33,7 @@ class Message extends Model
     protected function casts(): array
     {
         return [
+            'from_patient' => 'boolean',
             'read_at' => 'datetime',
         ];
     }
@@ -48,5 +52,41 @@ class Message extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class)->withTrashed();
+    }
+
+    /**
+     * @param  Builder<Message>  $query
+     */
+    public function scopeFromPatient(Builder $query): void
+    {
+        $query->where('from_patient', true);
+    }
+
+    /**
+     * @param  Builder<Message>  $query
+     */
+    public function scopeFromClinic(Builder $query): void
+    {
+        $query->where('from_patient', false);
+    }
+
+    /**
+     * @param  Builder<Message>  $query
+     */
+    public function scopeUnread(Builder $query): void
+    {
+        $query->whereNull('read_at');
+    }
+
+    /**
+     * Absender aus Sicht der Klinik bzw. des Patienten.
+     */
+    public function senderName(): string
+    {
+        if ($this->from_patient) {
+            return $this->patient->fullName();
+        }
+
+        return $this->user?->displayName() ?? 'Klinik';
     }
 }

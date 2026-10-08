@@ -29,6 +29,7 @@ class MonitoringBoard
                 'measurements' => fn ($query) => $query->where('measured_at', '>=', $since),
                 'alarms' => fn ($query) => $query->open(),
             ])
+            ->withCount(['messages as unread_messages_count' => fn ($query) => $query->fromPatient()->unread()])
             ->get();
 
         return $patients
@@ -81,6 +82,7 @@ class MonitoringBoard
             uploadKind: $kind,
             sparkline: Sparkline::path($patient->measurements),
             hasOpenAlarm: $patient->alarms->isNotEmpty(),
+            unreadMessages: (int) $patient->getAttribute('unread_messages_count'),
         );
     }
 }

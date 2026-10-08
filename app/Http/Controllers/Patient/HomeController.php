@@ -21,7 +21,7 @@ class HomeController extends PatientAreaController
             ->get();
 
         $month = $reports->summary($patient, now());
-        $unreadMessages = $patient->messages()->whereNull('read_at')->count();
+        $unreadMessages = $patient->messages()->fromClinic()->unread()->count();
 
         return view('patient.home', compact('patient', 'today', 'month', 'unreadMessages'));
     }

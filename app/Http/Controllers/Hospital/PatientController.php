@@ -8,6 +8,7 @@ use App\Http\Requests\DeletePatientRequest;
 use App\Http\Requests\PatientRequest;
 use App\Models\Patient;
 use App\Models\User;
+use App\Services\MessageService;
 use App\Services\MonitoringBoard;
 use App\Services\PatientOverviewService;
 use App\Services\PatientService;
@@ -35,10 +36,11 @@ class PatientController extends Controller
         return redirect()->route('patients.show', $first->patient);
     }
 
-    public function show(Patient $patient, MonitoringBoard $board, PatientOverviewService $overviews): View
+    public function show(Patient $patient, MonitoringBoard $board, PatientOverviewService $overviews, MessageService $messages): View
     {
-        $rows = $board->rows();
         $overview = $overviews->build($patient, now()->subDays(30)->startOfDay(), now());
+        $messages->markReadByClinic($patient);
+        $rows = $board->rows();
 
         return view('hospital.patients.show', compact('rows', 'overview'));
     }

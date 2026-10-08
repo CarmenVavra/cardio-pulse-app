@@ -2,22 +2,23 @@
 
 namespace App\Http\Controllers\Patient;
 
+use App\Services\MessageService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * M6 – Arzt kontaktieren, Nachrichten der Klinik.
+ * M6 – Arzt kontaktieren, Nachrichten mit der Klinik.
  */
 class DoctorController extends PatientAreaController
 {
-    public function index(Request $request): View
+    public function index(Request $request, MessageService $messageService): View
     {
         $patient = $this->patient($request)->load('doctor');
 
         $recentCalls = $patient->calls()->with('user')->latest()->limit(5)->get();
-        $messages = $patient->messages()->with('user')->latest()->limit(10)->get();
+        $messages = $messageService->thread($patient);
 
-        $patient->messages()->whereNull('read_at')->update(['read_at' => now()]);
+        $messageService->markReadByPatient($patient);
 
         return view('patient.doctor', compact('patient', 'recentCalls', 'messages'));
     }

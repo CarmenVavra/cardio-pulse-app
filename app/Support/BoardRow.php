@@ -20,6 +20,7 @@ final class BoardRow
         public readonly string $uploadKind,
         public readonly ?string $sparkline,
         public readonly bool $hasOpenAlarm,
+        public readonly int $unreadMessages = 0,
     ) {}
 
     /**

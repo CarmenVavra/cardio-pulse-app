@@ -10,6 +10,10 @@
     </x-slot:header>
 
     <div class="p-content">
+        @if (session('status'))
+            <div class="alert alert--success" role="status">{{ session('status') }}</div>
+        @endif
+
         @if ($doctor)
             <section class="card" style="padding:16px" aria-label="Behandelnde Ärztin / behandelnder Arzt">
                 <div class="doctor-card">
@@ -40,16 +44,22 @@
         </section>
 
         <section id="nachrichten" aria-labelledby="messages-title">
-            <h2 id="messages-title" class="meta" style="font-weight:600;margin:4px 0 8px">Nachrichten der Klinik</h2>
+            <h2 id="messages-title" class="meta" style="font-weight:600;margin:4px 0 8px">Nachrichten mit der Klinik</h2>
             <div class="card">
-                @forelse ($messages as $message)
-                    <div @class(['message', 'is-unread' => $message->read_at === null])>
-                        <div class="meta">{{ $message->user?->displayName() ?? 'Klinik' }} · {{ \App\Support\Format::day($message->created_at) }}</div>
-                        <div>{{ $message->body }}</div>
+                <x-message-thread :messages="$messages" viewer="patient" empty="Noch keine Nachrichten. Schreiben Sie Ihrem Behandlungsteam, z. B. bei Fragen zur Medikation." />
+
+                <form method="POST" action="{{ route('patient.messages.store') }}" class="chat-form" novalidate>
+                    @csrf
+                    <div class="field">
+                        <label class="field__label" for="message-body">Nachricht an die Klinik</label>
+                        <textarea class="textarea" id="message-body" name="body" rows="3" maxlength="2000" required
+                                  aria-describedby="message-hint{{ $errors->has('body') ? ' message-error' : '' }}"
+                                  @error('body') aria-invalid="true" @enderror>{{ old('body') }}</textarea>
+                        @error('body')<div class="field-error" id="message-error" role="alert">{{ $message }}</div>@enderror
+                        <p class="meta" id="message-hint">Antwort in der Regel innerhalb eines Werktags. Nicht für Notfälle – dann <b>112</b> wählen.</p>
                     </div>
-                @empty
-                    <p class="meta" style="padding:12px 16px">Keine Nachrichten.</p>
-                @endforelse
+                    <button type="submit" class="btn btn--navy btn--lg btn--block">Senden <span aria-hidden="true">→</span></button>
+                </form>
             </div>
         </section>
 
