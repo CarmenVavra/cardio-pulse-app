@@ -170,7 +170,7 @@ Zum Schluss im Panel den **Document Root** der Domain auf `/cardio-pulse/public`
 cd cardio-pulse && ./deploy.sh
 ```
 
-`deploy.sh` schaltet die App in den Wartungsmodus, holt den neuesten Stand von GitHub, gleicht PHP- und npm-Pakete ab, baut die Assets, führt Migrationen aus, erneuert die Caches und bricht beim ersten Fehler ab. Prüft vorher PHP (8.2+) und Node.js (20.19+ / 22.12+). Eine andere PHP-Version als den Shell-Standard nutzt `PHP=/usr/local/php83/bin/php ./deploy.sh`.
+`deploy.sh` schaltet die App in den Wartungsmodus, holt den neuesten Stand von GitHub, gleicht PHP- und npm-Pakete ab (lädt Composer als `composer.phar`, falls der Befehl fehlt), baut die Assets, führt Migrationen aus, erneuert die Caches und bricht beim ersten Fehler ab. Prüft vorher PHP (8.2+) und Node.js (20.19+ / 22.12+). Eine andere PHP-Version als den Shell-Standard nutzt `PHP=/usr/local/php83/bin/php ./deploy.sh`.
 
 **Sicherung:** `database/database.sqlite` und `.env` (enthält den Schlüssel `APP_KEY`).
 

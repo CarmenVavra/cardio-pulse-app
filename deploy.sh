@@ -6,7 +6,6 @@
 # Andere PHP-Version als die Standardversion: PHP=/usr/local/php83/bin/php ./deploy.sh
 set -euo pipefail
 
-cd "$(dirname "$0")"
 PHP="${PHP:-php}"
 
 fail() {
@@ -14,39 +13,70 @@ fail() {
     exit 1
 }
 
-"$PHP" -r 'exit(PHP_VERSION_ID >= 80200 ? 0 : 1);' \
-    || fail "PHP 8.2 oder neuer nötig (gefunden: $("$PHP" -r 'echo PHP_VERSION;')). Standardversion in /conf/phpversion setzen."
-node -e 'const [a, b] = process.versions.node.split(".").map(Number); process.exit(a > 22 || (a === 22 && b >= 12) || (a === 20 && b >= 19) ? 0 : 1)' \
-    || fail "Node.js 20.19+ oder 22.12+ nötig (gefunden: $(node -v))."
-[ -f .env ] || fail ".env fehlt – zuerst .env.example nach .env kopieren und anpassen (siehe README, Produktivbetrieb)."
+# Composer verwenden, falls installiert – sonst composer.phar ins Projekt laden
+# und gegen die offizielle Prüfsumme verifizieren.
+composer_cmd() {
+    if command -v composer > /dev/null 2>&1; then
+        COMPOSER=(composer)
+        return
+    fi
 
-installed=false
-[ -f vendor/autoload.php ] && installed=true
+    if [ ! -f composer.phar ]; then
+        echo "==> Composer herunterladen"
+        "$PHP" -r '
+            $url = "https://getcomposer.org/download/latest-stable/composer.phar";
+            $phar = file_get_contents($url);
+            $sum = trim(explode(" ", file_get_contents($url.".sha256sum"))[0]);
+            if ($phar === false || ! hash_equals($sum, hash("sha256", $phar))) {
+                fwrite(STDERR, "Prüfsumme von composer.phar stimmt nicht.\n");
+                exit(1);
+            }
+            file_put_contents("composer.phar", $phar);
+        ' || fail "Composer konnte nicht geladen werden."
+    fi
 
-if $installed; then
-    "$PHP" artisan down --retry=30
-    # Wartungsmodus auch bei Fehlern wieder beenden.
-    trap '"$PHP" artisan up' EXIT
-fi
+    COMPOSER=("$PHP" composer.phar)
+}
 
-echo "==> Neuesten Stand holen"
-git pull --ff-only
+# Alles steht in einer Funktion: Bash liest sie vollständig ein, bevor sie läuft –
+# so bleibt der Ablauf stabil, auch wenn „git pull“ diese Datei aktualisiert.
+main() {
+    cd "$(dirname "$0")"
 
-echo "==> PHP-Pakete"
-composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+    "$PHP" -r 'exit(PHP_VERSION_ID >= 80200 ? 0 : 1);' \
+        || fail "PHP 8.2 oder neuer nötig (gefunden: $("$PHP" -r 'echo PHP_VERSION;')). Standardversion in /conf/phpversion setzen."
+    node -e 'const [a, b] = process.versions.node.split(".").map(Number); process.exit(a > 22 || (a === 22 && b >= 12) || (a === 20 && b >= 19) ? 0 : 1)' \
+        || fail "Node.js 20.19+ oder 22.12+ nötig (gefunden: $(node -v))."
+    [ -f .env ] || fail ".env fehlt – zuerst .env.example nach .env kopieren und anpassen (siehe README, Produktivbetrieb)."
 
-echo "==> Assets bauen"
-npm ci --no-audit --no-fund
-npm run build
+    if [ -f vendor/autoload.php ]; then
+        "$PHP" artisan down --retry=30
+        # Wartungsmodus auch bei Fehlern wieder beenden.
+        trap '"$PHP" artisan up' EXIT
+    fi
 
-echo "==> Datenbank"
-if grep -qE '^DB_CONNECTION=sqlite' .env && [ ! -f database/database.sqlite ]; then
-    touch database/database.sqlite
-fi
-grep -qE '^APP_KEY=.+' .env || "$PHP" artisan key:generate --force
-"$PHP" artisan migrate --force
+    echo "==> Neuesten Stand holen"
+    git pull --ff-only
 
-echo "==> Caches"
-"$PHP" artisan optimize
+    echo "==> PHP-Pakete"
+    composer_cmd
+    "${COMPOSER[@]}" install --no-dev --optimize-autoloader --no-interaction --no-progress
 
-echo "Fertig."
+    echo "==> Assets bauen"
+    npm ci --no-audit --no-fund
+    npm run build
+
+    echo "==> Datenbank"
+    if grep -qE '^DB_CONNECTION=sqlite' .env && [ ! -f database/database.sqlite ]; then
+        touch database/database.sqlite
+    fi
+    grep -qE '^APP_KEY=.+' .env || "$PHP" artisan key:generate --force
+    "$PHP" artisan migrate --force
+
+    echo "==> Caches"
+    "$PHP" artisan optimize
+
+    echo "Fertig."
+}
+
+main "$@"
