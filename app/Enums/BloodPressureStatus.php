@@ -5,7 +5,7 @@ namespace App\Enums;
 /**
  * Ampel-Klassifizierung – identisch in Patienten-App und Krankenhaus.
  *
- * Auswertungsreihenfolge: Rot → Weiß (zu niedrig) → Gelb-Orange → Grün.
+ * Auswertungsreihenfolge: Rot → Blau (zu niedrig) → Gelb-Orange → Grün.
  * Hinweis: Der Bereich 130–139 / 85–89 ist im Konzept nicht definiert und wird
  * gemäß Design-Handoff als Gelb-Orange gewertet (mit medizinischer Leitung abstimmen).
  */
@@ -14,20 +14,20 @@ enum BloodPressureStatus: string
     case Red = 'red';
     case Amber = 'amber';
     case Green = 'green';
-    case White = 'white';
+    case Blue = 'blue';
 
     public static function classify(int $systolic, int $diastolic): self
     {
         return match (true) {
             $systolic >= 180 || $diastolic >= 120 => self::Red,
-            $systolic < 90 || $diastolic < 60 => self::White,
+            $systolic < 90 || $diastolic < 60 => self::Blue,
             $systolic >= 130 || $diastolic >= 85 => self::Amber,
             default => self::Green,
         };
     }
 
     /**
-     * Sortierreihenfolge der Krankenhauslisten: Rot → Gelb-Orange → Grün → Weiß.
+     * Sortierreihenfolge der Krankenhauslisten: Rot → Gelb-Orange → Grün → Blau.
      */
     public function sortOrder(): int
     {
@@ -35,7 +35,7 @@ enum BloodPressureStatus: string
             self::Red => 0,
             self::Amber => 1,
             self::Green => 2,
-            self::White => 3,
+            self::Blue => 3,
         };
     }
 
@@ -60,7 +60,7 @@ enum BloodPressureStatus: string
             self::Red => 'Gefährlich hoch',
             self::Amber => 'Zu hoch',
             self::Green => 'Normal',
-            self::White => 'Zu niedrig',
+            self::Blue => 'Zu niedrig',
         };
     }
 
@@ -78,12 +78,13 @@ enum BloodPressureStatus: string
             self::Red => 'Rot',
             self::Amber => 'Gelb-Orange',
             self::Green => 'Grün',
-            self::White => 'Weiß',
+            self::Blue => 'Blau',
         };
     }
 
     /**
-     * Füllfarbe (Ampel).
+     * Füllfarbe (Ampel). Blau = „Blue Ice“ aus dem Projektkonzept, leicht abgedunkelt
+     * (#0288D1 → #0277BD), damit weiße Schrift darauf WCAG-AA-Kontrast erreicht.
      */
     public function color(): string
     {
@@ -91,7 +92,7 @@ enum BloodPressureStatus: string
             self::Red => '#D32F2F',
             self::Amber => '#ED6C02',
             self::Green => '#2E7D32',
-            self::White => '#FFFFFF',
+            self::Blue => '#0277BD',
         };
     }
 
@@ -104,7 +105,7 @@ enum BloodPressureStatus: string
             self::Red => '#B71C1C',
             self::Amber => '#9A4600',
             self::Green => '#1F5A23',
-            self::White => '#0F2C59',
+            self::Blue => '#01579B',
         };
     }
 
@@ -117,7 +118,7 @@ enum BloodPressureStatus: string
             self::Red => 'HH',
             self::Amber => 'H',
             self::Green => 'N',
-            self::White => 'L',
+            self::Blue => 'L',
         };
     }
 
@@ -127,7 +128,7 @@ enum BloodPressureStatus: string
             self::Red => 'Critical high',
             self::Amber => 'High',
             self::Green => 'Normal',
-            self::White => 'Low',
+            self::Blue => 'Low',
         };
     }
 
@@ -140,7 +141,7 @@ enum BloodPressureStatus: string
             self::Red => 'Bei Brustschmerz, Atemnot, Sprach- oder Sehstörungen rufen Sie sofort den Notruf.',
             self::Amber => 'Leicht erhöht. Ruhen Sie sich 5 Minuten aus und messen Sie dann erneut.',
             self::Green => 'Ihr Blutdruck liegt im Normalbereich. Weiter so – messen Sie wie gewohnt.',
-            self::White => 'Ihr Blutdruck ist niedrig. Setzen oder legen Sie sich hin und trinken Sie ein Glas Wasser. Bei Bewusstseinsstörung sofort 112 wählen.',
+            self::Blue => 'Ihr Blutdruck ist niedrig. Setzen oder legen Sie sich hin und trinken Sie ein Glas Wasser. Bei Bewusstseinsstörung sofort 112 wählen.',
         };
     }
 
@@ -152,7 +153,7 @@ enum BloodPressureStatus: string
     {
         // [Segmentbeginn, Segmentbreite, Untergrenze mmHg, Spannweite mmHg]
         [$start, $width, $min, $span] = match ($this) {
-            self::White => [0.0, 1.0, 60, 30],
+            self::Blue => [0.0, 1.0, 60, 30],
             self::Green => [1.0, 1.4, 90, 40],
             self::Amber => [2.4, 1.4, 130, 50],
             self::Red => [3.8, 1.0, 180, 50],

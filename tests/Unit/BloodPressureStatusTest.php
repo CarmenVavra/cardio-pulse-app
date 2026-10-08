@@ -16,9 +16,9 @@ class BloodPressureStatusTest extends TestCase
         return [
             'rot systolisch' => [180, 100, BloodPressureStatus::Red],
             'rot diastolisch' => [150, 120, BloodPressureStatus::Red],
-            'rot vor weiß' => [185, 55, BloodPressureStatus::Red],
-            'weiß systolisch' => [89, 70, BloodPressureStatus::White],
-            'weiß diastolisch' => [110, 59, BloodPressureStatus::White],
+            'rot vor blau' => [185, 55, BloodPressureStatus::Red],
+            'blau systolisch' => [89, 70, BloodPressureStatus::Blue],
+            'blau diastolisch' => [110, 59, BloodPressureStatus::Blue],
             'gelb systolisch' => [130, 80, BloodPressureStatus::Amber],
             'gelb diastolisch' => [125, 85, BloodPressureStatus::Amber],
             'gelb knapp unter rot' => [179, 119, BloodPressureStatus::Amber],
@@ -36,7 +36,7 @@ class BloodPressureStatusTest extends TestCase
     public function test_worst_prefers_triage_order(): void
     {
         $this->assertSame(BloodPressureStatus::Red, BloodPressureStatus::worst(BloodPressureStatus::Green, BloodPressureStatus::Red));
-        $this->assertSame(BloodPressureStatus::Amber, BloodPressureStatus::worst(BloodPressureStatus::Amber, BloodPressureStatus::White));
+        $this->assertSame(BloodPressureStatus::Amber, BloodPressureStatus::worst(BloodPressureStatus::Amber, BloodPressureStatus::Blue));
         $this->assertSame(BloodPressureStatus::Green, BloodPressureStatus::worst(null, BloodPressureStatus::Green));
     }
 
@@ -45,7 +45,7 @@ class BloodPressureStatusTest extends TestCase
         $this->assertSame('HH', BloodPressureStatus::Red->fhirInterpretation());
         $this->assertSame('H', BloodPressureStatus::Amber->fhirInterpretation());
         $this->assertSame('N', BloodPressureStatus::Green->fhirInterpretation());
-        $this->assertSame('L', BloodPressureStatus::White->fhirInterpretation());
+        $this->assertSame('L', BloodPressureStatus::Blue->fhirInterpretation());
     }
 
     public function test_scale_marker_lies_within_its_segment(): void

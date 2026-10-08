@@ -55,11 +55,13 @@ Demo-Daten neu erzeugen: `php artisan migrate:fresh --seed`
 
 ## Funktionen
 
+**Ampel** (identisch in App und Krankenhaus, `app/Enums/BloodPressureStatus.php`): Rot ≥ 180 / ≥ 120 · Blau (zu niedrig) < 90 / < 60 · Gelb-Orange ≥ 130 / ≥ 85 · Grün sonst (mmHg, systolisch / diastolisch).
+
 ### Krankenhaus
 
 | Bereich | Funktion |
 |---|---|
-| **Überwachung** (D2) | Live-Board mit Triage-Sortierung Rot → Gelb-Orange → Grün → Weiß, Aktualisierung alle 5 s, Hervorhebung neuer Uploads, Suche, 7-Tage-Sparkline, Hinweis auf neue Patienten-Nachrichten |
+| **Überwachung** (D2) | Live-Board mit Triage-Sortierung Rot → Gelb-Orange → Grün → Blau, Aktualisierung alle 5 s, Hervorhebung neuer Uploads, Suche, 7-Tage-Sparkline, Hinweis auf neue Patienten-Nachrichten |
 | **Alarm** (D3) | Rote Werte lösen Alarm aus – blinkendes Banner/Rahmen, Signalton (Web Audio, 960 Hz) bis zur Pflicht-Quittierung mit Maßnahme; Audit-Log |
 | **Privacy-Lock** (D6) | Nach 3 Min Inaktivität; Namen werden serverseitig ausgeblendet, Entsperren per PIN |
 | **Patienten** (D4) | 30-Tage-Verlauf, Kennzahlen, Medikation, Chat mit dem Patienten, PDF-Druckansicht, **KIS-Export als HL7 FHIR R4 Bundle** (LOINC 85354-9, 8480-6, 8462-4, 8867-4, Interpretation HH/H/N/L) |
@@ -100,7 +102,7 @@ Alle sicherheitsrelevanten Aktionen (Alarm quittieren, Export, Anlegen/Ändern/L
 - Kein **Passwort ändern / Passwort vergessen** für Patienten und Ärzte.
 - Der Chat ist **kein Notfallkanal** – die App weist auf 112 hin.
 - Bluetooth-Import und Foto-Scan (OCR) sind nur in nativen Apps sinnvoll – in der Web-App erscheint ein Hinweis.
-- Hypotonie wird gemäß Mockup **weiß mit dunkler Kontur** dargestellt (Konzept nennt „Blue Ice #0288D1").
+- Hypotonie wird **blau** dargestellt („Blue Ice“ laut Konzept, für WCAG-AA-Kontrast mit weißer Schrift leicht abgedunkelt: `#0277BD` statt `#0288D1`). Das Mockup sah weiß vor – das war zu unauffällig.
 - Bereich 130–139 / 85–89 ist im Konzept undefiniert und wird als Gelb-Orange gewertet – **mit medizinischer Leitung abstimmen**.
 - Mikro-Labels sind 12 px statt 11 px (Mindestschriftgröße laut CLAUDE.md).
 - Für den Produktivbetrieb: HTTPS erzwingen, `SESSION_ENCRYPT=true`, `APP_DEBUG=false`, `CARDIOPULSE_DEMO=false`.

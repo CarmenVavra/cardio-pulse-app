@@ -70,6 +70,6 @@ final class MeasurementStats
         return $this->distribution['red'].' rot · '
             .$this->distribution['amber'].' gelb-orange · '
             .$this->distribution['green'].' grün · '
-            .$this->distribution['white'].' weiß';
+            .$this->distribution['blue'].' blau';
     }
 }

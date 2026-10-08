@@ -28,6 +28,9 @@
     --green-dark: #24642a;
     --green-tint: #dceadb;
     --green-fg: #1f5a23;
+    --blue: #0277bd;
+    --blue-tint: #d6eaf5;
+    --blue-fg: #01579b;
 
     --edge: inset 0 0 0 2px var(--navy);
     --rule: 2px solid var(--navy);
@@ -176,12 +179,12 @@ table {
     --st-edge: none;
 }
 
-.st-white {
-    --st: #fff;
-    --st-tint: #fff;
-    --st-tag-fg: var(--navy);
-    --st-fg: var(--navy);
-    --st-edge: var(--edge);
+.st-blue {
+    --st: var(--blue);
+    --st-tint: var(--blue-tint);
+    --st-tag-fg: var(--blue-fg);
+    --st-fg: var(--blue-fg);
+    --st-edge: none;
 }
 
 .st-none {
@@ -214,11 +217,6 @@ table {
 .tag--solid {
     background: var(--st);
     color: #fff;
-}
-
-.st-white .tag--solid,
-.tag--solid.st-white {
-    color: var(--navy);
 }
 
 .st-amber .tag--solid,
@@ -845,11 +843,6 @@ table {
     border-top: 6px solid var(--st);
 }
 
-.counter.st-white {
-    border-top-color: #fff;
-    box-shadow: inset 0 2px 0 var(--navy);
-}
-
 .counter__label {
     font-size: 12px;
     font-weight: 800;
@@ -1461,10 +1454,8 @@ table {
     fill: var(--green);
 }
 
-.dot-white {
-    fill: #fff;
-    stroke: var(--navy);
-    stroke-width: 1.5;
+.dot-blue {
+    fill: var(--blue);
 }
 
 .detail__bottom {
@@ -1913,11 +1904,6 @@ table {
     padding: 14px 16px;
 }
 
-.st-white.last-card {
-    border-top-color: #fff;
-    box-shadow: inset 0 2px 0 var(--navy);
-}
-
 .last-card__bp {
     font-size: 64px;
     font-weight: 800;
@@ -2196,13 +2182,9 @@ table {
 
 .st-red .result-head,
 .result-head.st-red,
-.result-head.st-green {
+.result-head.st-green,
+.result-head.st-blue {
     color: #fff;
-}
-
-.result-head.st-white {
-    background: #fff;
-    border-bottom: var(--rule);
 }
 
 .result-head__kicker {
@@ -2418,7 +2400,8 @@ table {
 }
 
 .calendar__day.st-red,
-.calendar__day.st-green {
+.calendar__day.st-green,
+.calendar__day.st-blue {
     color: #fff;
 }
 
@@ -3186,10 +3169,6 @@ a.msg-badge:hover {
 
 .spark path {
     stroke: var(--st);
-}
-
-.st-white .spark path {
-    stroke: var(--navy);
 }
 
 .side-item__name,

@@ -11,7 +11,7 @@ use App\Support\Sparkline;
 use Illuminate\Support\Collection;
 
 /**
- * Daten für den 24/7-Überwachungsscreen: Triage-Sortierung Rot → Gelb-Orange → Grün → Weiß.
+ * Daten für den 24/7-Überwachungsscreen: Triage-Sortierung Rot → Gelb-Orange → Grün → Blau.
  */
 class MonitoringBoard
 {

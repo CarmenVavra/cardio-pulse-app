@@ -14,7 +14,7 @@
     <div class="p-content" style="gap:18px;padding-top:20px">
         <div>
             <div class="scale" role="img" aria-label="Einordnung: {{ $status->label() }}">
-                <span style="background:#fff;box-shadow:var(--edge)"></span>
+                <span style="background:var(--blue)"></span>
                 <span style="background:var(--green)"></span>
                 <span style="background:var(--amber)"></span>
                 <span style="background:var(--red)"></span>

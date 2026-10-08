@@ -38,7 +38,7 @@
 
     <div class="board" id="board" data-board>
         <table class="board-table" aria-describedby="board-caption">
-            <caption id="board-caption" class="sr-only">Live-Board: Patientinnen und Patienten zu Hause, sortiert nach Dringlichkeit (Rot, Gelb-Orange, Grün, Weiß)</caption>
+            <caption id="board-caption" class="sr-only">Live-Board: Patientinnen und Patienten zu Hause, sortiert nach Dringlichkeit (Rot, Gelb-Orange, Grün, Blau)</caption>
             <colgroup>
                 <col style="width:10px">
                 <col style="width:150px">

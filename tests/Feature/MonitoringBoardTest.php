@@ -13,18 +13,18 @@ class MonitoringBoardTest extends TestCase
     {
         $green = $this->patient(['first_name' => 'Gerda', 'last_name' => 'Grün']);
         $red = $this->patient(['first_name' => 'Rolf', 'last_name' => 'Rot']);
-        $white = $this->patient(['first_name' => 'Wilma', 'last_name' => 'Weiß']);
+        $blue = $this->patient(['first_name' => 'Bruno', 'last_name' => 'Blau']);
         $amber = $this->patient(['first_name' => 'Gustav', 'last_name' => 'Gelb']);
 
         $this->measurement($green, 120, 75);
         $this->measurement($red, 190, 110);
-        $this->measurement($white, 85, 55);
+        $this->measurement($blue, 85, 55);
         $this->measurement($amber, 150, 90);
 
         $this->actingAs($this->staff())
             ->get('/ueberwachung')
             ->assertStatus(200)
-            ->assertSeeInOrder(['Rolf Rot', 'Gustav Gelb', 'Gerda Grün', 'Wilma Weiß'])
+            ->assertSeeInOrder(['Rolf Rot', 'Gustav Gelb', 'Gerda Grün', 'Bruno Blau'])
             ->assertSee('190/110')
             ->assertSee('Sofort anrufen')
             ->assertSee('Haftungsausschluss');
