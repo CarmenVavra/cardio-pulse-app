@@ -40,18 +40,23 @@ class MonthlyReportService
             ]);
         }
 
-        $report = MonthlyReport::updateOrCreate(
-            ['patient_id' => $patient->id, 'month' => $summary->month->toDateString()],
-            [
-                'sent_at' => now(),
-                'measurement_count' => $summary->stats->count,
-                'avg_systolic' => $summary->stats->avgSystolic,
-                'avg_diastolic' => $summary->stats->avgDiastolic,
-                'worst_status' => $summary->stats->worst,
-            ],
-        );
+        // Vorhandenen Bericht über den datumsgenauen Abgleich der Monatsübersicht wiederverwenden:
+        // "month" ist als Datum mit Uhrzeit gespeichert, ein exakter Stringvergleich findet ihn nicht.
+        $resent = $summary->report !== null;
+        $report = $summary->report ?? new MonthlyReport([
+            'patient_id' => $patient->id,
+            'month' => $summary->month,
+        ]);
 
-        AuditLog::record('monthly_report.sent', $report, [
+        $report->fill([
+            'sent_at' => now(),
+            'measurement_count' => $summary->stats->count,
+            'avg_systolic' => $summary->stats->avgSystolic,
+            'avg_diastolic' => $summary->stats->avgDiastolic,
+            'worst_status' => $summary->stats->worst,
+        ])->save();
+
+        AuditLog::record($resent ? 'monthly_report.resent' : 'monthly_report.sent', $report, [
             'month' => $summary->month->format('Y-m'),
             'measurements' => $summary->stats->count,
         ]);

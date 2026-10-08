@@ -74,6 +74,47 @@ class MonthlyReportTest extends TestCase
             ->assertSee('Monatsverlauf September 2026');
     }
 
+    public function test_report_can_be_sent_again_and_is_updated(): void
+    {
+        $patient = $this->patient();
+        $this->measurement($patient, 150, 95, ['measured_at' => '2026-09-10 08:00']);
+
+        $this->actingAs($patient->user)->post('/app/monat/2026-09/senden')->assertSessionHasNoErrors();
+
+        // Nachträglich erfasste Messung, dann erneut senden.
+        $this->measurement($patient, 120, 75, ['measured_at' => '2026-09-20 08:00']);
+        Carbon::setTestNow(Carbon::parse('2026-10-09 12:00:00'));
+
+        $this->post('/app/monat/2026-09/senden')
+            ->assertRedirect(route('patient.month', '2026-09'))
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseCount('monthly_reports', 1);
+        $report = MonthlyReport::firstOrFail();
+        $this->assertSame(2, $report->measurement_count);
+        $this->assertSame('2026-10-09 12:00:00', $report->sent_at->format('Y-m-d H:i:s'));
+        $this->assertDatabaseHas('audit_logs', ['action' => 'monthly_report.resent']);
+    }
+
+    public function test_seeded_style_report_can_be_resent(): void
+    {
+        // Bericht wie vom Seeder angelegt (Monat als Datumsstring übergeben).
+        $patient = $this->patient();
+        $this->measurement($patient, 150, 95, ['measured_at' => '2026-09-10 08:00']);
+        $patient->monthlyReports()->create([
+            'month' => '2026-09-01',
+            'sent_at' => '2026-09-30 19:10:00',
+            'measurement_count' => 1,
+        ]);
+
+        $this->actingAs($patient->user)
+            ->post('/app/monat/2026-09/senden')
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('patient.month', '2026-09'));
+
+        $this->assertDatabaseCount('monthly_reports', 1);
+    }
+
     public function test_future_month_is_not_found(): void
     {
         $this->actingAs($this->patient()->user)->get('/app/monat/2027-01')->assertNotFound();
