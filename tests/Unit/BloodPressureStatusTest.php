@@ -38,6 +38,7 @@ class BloodPressureStatusTest extends TestCase
         $this->assertSame(BloodPressureStatus::Red, BloodPressureStatus::worst(BloodPressureStatus::Green, BloodPressureStatus::Red));
         $this->assertSame(BloodPressureStatus::Amber, BloodPressureStatus::worst(BloodPressureStatus::Amber, BloodPressureStatus::Blue));
         $this->assertSame(BloodPressureStatus::Green, BloodPressureStatus::worst(null, BloodPressureStatus::Green));
+        $this->assertSame(BloodPressureStatus::Blue, BloodPressureStatus::worst(BloodPressureStatus::Green, BloodPressureStatus::Blue));
     }
 
     public function test_fhir_interpretation_codes(): void

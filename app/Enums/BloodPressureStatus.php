@@ -11,10 +11,11 @@ namespace App\Enums;
  */
 enum BloodPressureStatus: string
 {
+    // Reihenfolge der Fälle = Triage-Reihenfolge (Zähler auf dem Board).
     case Red = 'red';
     case Amber = 'amber';
-    case Green = 'green';
     case Blue = 'blue';
+    case Green = 'green';
 
     public static function classify(int $systolic, int $diastolic): self
     {
@@ -27,15 +28,17 @@ enum BloodPressureStatus: string
     }
 
     /**
-     * Sortierreihenfolge der Krankenhauslisten: Rot → Gelb-Orange → Grün → Blau.
+     * Sortierreihenfolge der Krankenhauslisten: Rot → Gelb-Orange → Blau → Grün.
+     * Zu niedrige Werte stehen vor normalen, damit Hypotonie nicht übersehen wird
+     * (abweichend vom Konzept, das Blau zuletzt nennt).
      */
     public function sortOrder(): int
     {
         return match ($this) {
             self::Red => 0,
             self::Amber => 1,
-            self::Green => 2,
-            self::Blue => 3,
+            self::Blue => 2,
+            self::Green => 3,
         };
     }
 

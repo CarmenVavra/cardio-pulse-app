@@ -24,7 +24,7 @@ class MonitoringBoardTest extends TestCase
         $this->actingAs($this->staff())
             ->get('/ueberwachung')
             ->assertStatus(200)
-            ->assertSeeInOrder(['Rolf Rot', 'Gustav Gelb', 'Gerda Grün', 'Bruno Blau'])
+            ->assertSeeInOrder(['Rolf Rot', 'Gustav Gelb', 'Bruno Blau', 'Gerda Grün'])
             ->assertSee('190/110')
             ->assertSee('Sofort anrufen')
             ->assertSee('Haftungsausschluss');

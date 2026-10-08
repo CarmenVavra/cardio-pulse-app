@@ -61,7 +61,7 @@ Demo-Daten neu erzeugen: `php artisan migrate:fresh --seed`
 
 | Bereich | Funktion |
 |---|---|
-| **Überwachung** (D2) | Live-Board mit Triage-Sortierung Rot → Gelb-Orange → Grün → Blau, Aktualisierung alle 5 s, Hervorhebung neuer Uploads, Suche, 7-Tage-Sparkline, Hinweis auf neue Patienten-Nachrichten |
+| **Überwachung** (D2) | Live-Board mit Triage-Sortierung Rot → Gelb-Orange → Blau (zu niedrig) → Grün, Aktualisierung alle 5 s, Hervorhebung neuer Uploads, Suche, 7-Tage-Sparkline, Hinweis auf neue Patienten-Nachrichten |
 | **Alarm** (D3) | Rote Werte lösen Alarm aus – blinkendes Banner/Rahmen, Signalton (Web Audio, 960 Hz) bis zur Pflicht-Quittierung mit Maßnahme; Audit-Log |
 | **Privacy-Lock** (D6) | Nach 3 Min Inaktivität; Namen werden serverseitig ausgeblendet, Entsperren per PIN |
 | **Patienten** (D4) | 30-Tage-Verlauf, Kennzahlen, Medikation, Chat mit dem Patienten, PDF-Druckansicht, **KIS-Export als HL7 FHIR R4 Bundle** (LOINC 85354-9, 8480-6, 8462-4, 8867-4, Interpretation HH/H/N/L) |

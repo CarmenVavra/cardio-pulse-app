@@ -54,8 +54,8 @@
             <div class="dist-bar" role="img" aria-label="Verteilung: {{ $stats->distributionLabel() }}">
                 <span style="flex:{{ $stats->distribution['red'] }};background:var(--red)"></span>
                 <span style="flex:{{ $stats->distribution['amber'] }};background:var(--amber)"></span>
-                <span style="flex:{{ $stats->distribution['green'] }};background:var(--green)"></span>
                 <span style="flex:{{ $stats->distribution['blue'] }};background:var(--blue)"></span>
+                <span style="flex:{{ $stats->distribution['green'] }};background:var(--green)"></span>
             </div>
             <div class="meta" style="margin-top:6px">{{ $stats->distributionLabel() }}</div>
         </div>
