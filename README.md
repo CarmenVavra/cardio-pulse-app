@@ -178,7 +178,7 @@ Zum Schluss im Panel den **Document Root** der Domain auf `/cardio-pulse/public`
    cd cardio-pulse && ./deploy.sh
    ```
 
-`deploy.sh` schaltet die App in den Wartungsmodus, holt den neuesten Stand von GitHub, gleicht die PHP-Pakete ab (lädt Composer als `composer.phar`, falls der Befehl fehlt), baut die Assets (nur mit Node.js 20.19+ / 22.12+), führt Migrationen aus, erneuert die Caches und bricht beim ersten Fehler ab. Eine andere PHP-Version als den Shell-Standard nutzt `PHP=/usr/local/php83/bin/php ./deploy.sh`.
+`deploy.sh` schaltet die App in den Wartungsmodus, holt den neuesten Stand von GitHub, gleicht die PHP-Pakete ab (lädt Composer als `composer.phar`, falls der Befehl fehlt), baut die Assets (nur mit Node.js 20.19+ / 22.12+), führt Migrationen aus, leert die Laravel-Caches und bricht beim ersten Fehler ab. Eine andere PHP-Version als den Shell-Standard nutzt `PHP=/usr/local/php83/bin/php ./deploy.sh`. Konfiguration, Routen und Views werden bewusst nicht gecacht: Die netcup-SSH-Shell sieht das Projekt unter `/cardio-pulse`, der Webserver unter `/var/www/vhosts/…/cardio-pulse` – ein Cache aus der Shell enthielte falsche Pfade.
 
 **Sicherung:** `database/database.sqlite` und `.env` (enthält den Schlüssel `APP_KEY`).
 

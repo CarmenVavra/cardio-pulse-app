@@ -84,8 +84,12 @@ main() {
     grep -qE '^APP_KEY=.+' .env || "$PHP" artisan key:generate --force
     "$PHP" artisan migrate --force
 
-    echo "==> Caches"
-    "$PHP" artisan optimize
+    # Keine Caches anlegen, nur alte leeren: Die SSH-Shell des netcup-Webhostings
+    # sieht die Dateien unter einem anderen absoluten Pfad als der Webserver
+    # (chroot) – Konfigurations-, Routen- und View-Caches aus der Shell enthielten
+    # falsche Pfade und führten zu „open_basedir“-Fehlern.
+    echo "==> Caches leeren"
+    "$PHP" artisan optimize:clear
 
     echo "Fertig."
 }
