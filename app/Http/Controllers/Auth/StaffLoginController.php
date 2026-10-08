@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StaffLoginRequest;
 use App\Models\AuditLog;
+use App\Services\LoginThrottle;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -22,8 +23,10 @@ class StaffLoginController extends Controller
         return view('auth.staff-login', compact('departments'));
     }
 
-    public function store(StaffLoginRequest $request): RedirectResponse
+    public function store(StaffLoginRequest $request, LoginThrottle $throttle): RedirectResponse
     {
+        $throttle->ensureNotLocked($request->validated('username'), 'username');
+
         $credentials = [
             'username' => $request->validated('username'),
             'password' => $request->validated('password'),
@@ -31,6 +34,7 @@ class StaffLoginController extends Controller
         ];
 
         if (! Auth::attempt($credentials)) {
+            $throttle->failed($request->validated('username'));
             AuditLog::record('auth.failed', null, ['username' => $request->validated('username')]);
 
             return back()
@@ -38,6 +42,7 @@ class StaffLoginController extends Controller
                 ->onlyInput('username', 'department');
         }
 
+        $throttle->succeeded($request->validated('username'));
         $request->session()->regenerate();
 
         $department = $request->validated('department');

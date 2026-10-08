@@ -43,6 +43,13 @@ return [
     'demo' => (bool) env('CARDIOPULSE_DEMO', true),
 
     /*
+     | Reverse-Proxy vor der App (z. B. Load Balancer beim Hosting): IP-Adressen, deren
+     | X-Forwarded-*-Header vertraut wird, kommagetrennt oder "*". Leer = kein Proxy.
+     | Nötig, damit HTTPS und die Client-IP (Login-Sperre, Audit-Log) korrekt erkannt werden.
+     */
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
+    /*
     |--------------------------------------------------------------------------
     | Erfassung
     |--------------------------------------------------------------------------

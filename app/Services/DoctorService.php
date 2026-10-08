@@ -19,7 +19,7 @@ class DoctorService
     /**
      * @param  array{title: ?string, name: string, username: string, email: string, phone: ?string, available_until: ?string}  $data
      */
-    public function create(array $data, string $password, string $pin, User $by): User
+    public function create(array $data, string $password, string $pin, ?User $by = null): User
     {
         $doctor = User::create([
             ...$data,
