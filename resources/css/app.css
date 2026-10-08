@@ -3329,3 +3329,32 @@ table {
 .med-home-empty {
     padding: 0 16px 8px;
 }
+
+/* Ärzteverwaltung */
+
+.list-page__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.doctor-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Tabellen scrollen bei Bedarf innerhalb ihres Containers, nie die ganze Seite. */
+.table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+@media (max-width: 1000px) {
+    .data-table .hide-md {
+        display: none;
+    }
+}

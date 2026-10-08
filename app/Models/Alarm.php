@@ -57,7 +57,7 @@ class Alarm extends Model
      */
     public function acknowledgedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'acknowledged_by');
+        return $this->belongsTo(User::class, 'acknowledged_by')->withTrashed();
     }
 
     /**

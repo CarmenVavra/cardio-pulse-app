@@ -64,7 +64,7 @@ class Patient extends Model
      */
     public function doctor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'doctor_id');
+        return $this->belongsTo(User::class, 'doctor_id')->withTrashed();
     }
 
     /**

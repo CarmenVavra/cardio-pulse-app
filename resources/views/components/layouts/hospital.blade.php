@@ -6,6 +6,7 @@
         'patients' => ['Patienten', route('patients.index')],
         'reports' => ['Monatsberichte', route('reports.index')],
         'calls' => ['Anrufe', route('calls.index')],
+        'doctors' => ['Ärzte', route('doctors.index')],
     ];
 @endphp
 <!DOCTYPE html>

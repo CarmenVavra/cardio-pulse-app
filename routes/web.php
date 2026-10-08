@@ -7,6 +7,7 @@ use App\Http\Controllers\Hospital\AlarmController;
 use App\Http\Controllers\Hospital\BoardController;
 use App\Http\Controllers\Hospital\CallController;
 use App\Http\Controllers\Hospital\DemoUploadController;
+use App\Http\Controllers\Hospital\DoctorController as HospitalDoctorController;
 use App\Http\Controllers\Hospital\ExportController;
 use App\Http\Controllers\Hospital\MedicationController;
 use App\Http\Controllers\Hospital\MessageController;
@@ -74,6 +75,13 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
         Route::post('/patienten/{patient}/anrufe', [CallController::class, 'store'])->name('calls.store');
 
         Route::get('/monatsberichte', [MonthlyReportController::class, 'index'])->name('reports.index');
+
+        Route::get('/aerzte', [HospitalDoctorController::class, 'index'])->name('doctors.index');
+        Route::get('/aerzte/neu', [HospitalDoctorController::class, 'create'])->name('doctors.create');
+        Route::post('/aerzte', [HospitalDoctorController::class, 'store'])->name('doctors.store');
+        Route::get('/aerzte/{doctor}/bearbeiten', [HospitalDoctorController::class, 'edit'])->name('doctors.edit');
+        Route::put('/aerzte/{doctor}', [HospitalDoctorController::class, 'update'])->name('doctors.update');
+        Route::delete('/aerzte/{doctor}', [HospitalDoctorController::class, 'destroy'])->name('doctors.destroy');
 
         Route::get('/anrufe', [CallController::class, 'index'])->name('calls.index');
         Route::get('/anrufe/{call}', [CallController::class, 'show'])->name('calls.show');
