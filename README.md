@@ -24,6 +24,8 @@ composer require laravel/boost --dev
 
 # CardioPulse – Entwicklung
 
+[![CI](https://github.com/CarmenVavra/cardio-pulse-app/actions/workflows/ci.yml/badge.svg)](https://github.com/CarmenVavra/cardio-pulse-app/actions/workflows/ci.yml)
+
 Telemedizin-Plattform für Hypertonie-Patienten zu Hause: Patienten-App (Smartphone) + 24/7-Überwachungsscreen im Krankenhaus.
 Umsetzung nach `CardioPulse_Projektkonzept.pdf` und den Mockups in `UI_MOCKUPS/` (Screens D1–D6, M1–M7).
 
@@ -31,8 +33,11 @@ Umsetzung nach `CardioPulse_Projektkonzept.pdf` und den Mockups in `UI_MOCKUPS/`
 
 ## Starten / Stoppen
 
-- `start.bat` – installiert bei Bedarf Abhängigkeiten, legt DB mit Demo-Daten an, baut Assets und startet den Server auf **http://127.0.0.1:8700**
+- `start.bat` – installiert bei Bedarf Abhängigkeiten, legt die DB mit Demo-Daten an bzw. führt neue Migrationen aus, baut die Assets und startet den Server auf **http://127.0.0.1:8700**
 - `stop.bat` – beendet den Server auf Port 8700
+
+Nach einem `git pull` genügt `start.bat` – neue Migrationen und geänderte Assets werden dabei automatisch übernommen.
+Ohne `start.bat`: `composer install`, `npm install`, `php artisan migrate`, `npm run build`.
 
 ## Adressen
 
@@ -50,25 +55,59 @@ Demo-Daten neu erzeugen: `php artisan migrate:fresh --seed`
 
 ## Funktionen
 
-- **Ampel** (identisch App/Krankenhaus): Rot ≥180/≥120 · Weiß <90/<60 · Gelb-Orange ≥130/≥85 · Grün sonst (`app/Enums/BloodPressureStatus.php`)
-- **Live-Board** (D2): Triage-Sortierung Rot → Gelb-Orange → Grün → Weiß, Aktualisierung alle 5 s, neue Uploads werden hervorgehoben, Suche, 7-Tage-Sparkline
-- **Alarm** (D3): rote Werte lösen Alarm aus – blinkendes Banner/Rahmen, Signalton (Web Audio, 960 Hz) bis zur Pflicht-Quittierung mit Maßnahme; Audit-Log
-- **Privacy-Lock** (D6): nach 3 Min Inaktivität, Namen werden serverseitig ausgeblendet, Entsperren per PIN
-- **Patientendetail / Monatsberichte** (D4): 30-Tage-Verlauf, Kennzahlen, Medikation, Nachricht an Patient, PDF-Druckansicht, **KIS-Export als HL7 FHIR R4 Bundle** (LOINC 85354-9, 8480-6, 8462-4, 8867-4, Interpretation HH/H/N/L)
-- **Anrufe** (D5/M6/M7): Arzt ↔ Patient in beide Richtungen inkl. Klingeln, Annehmen/Ablehnen, Gesprächsdauer, Gesprächsnotiz
-- **Patienten-App**: Erfassung per Numpad (M2), Ergebnis (M3), Notfall-Interruption mit Notruf 112 (M4), Monatskalender + Versand an Krankenhaus + PDF für Hausarzt (M5)
-- **Demo-Modus**: „Demo: Upload simulieren" auf dem Board (`CARDIOPULSE_DEMO=false` zum Abschalten)
+### Krankenhaus
+
+| Bereich | Funktion |
+|---|---|
+| **Überwachung** (D2) | Live-Board mit Triage-Sortierung Rot → Gelb-Orange → Grün → Weiß, Aktualisierung alle 5 s, Hervorhebung neuer Uploads, Suche, 7-Tage-Sparkline, Hinweis auf neue Patienten-Nachrichten |
+| **Alarm** (D3) | Rote Werte lösen Alarm aus – blinkendes Banner/Rahmen, Signalton (Web Audio, 960 Hz) bis zur Pflicht-Quittierung mit Maßnahme; Audit-Log |
+| **Privacy-Lock** (D6) | Nach 3 Min Inaktivität; Namen werden serverseitig ausgeblendet, Entsperren per PIN |
+| **Patienten** (D4) | 30-Tage-Verlauf, Kennzahlen, Medikation, Chat mit dem Patienten, PDF-Druckansicht, **KIS-Export als HL7 FHIR R4 Bundle** (LOINC 85354-9, 8480-6, 8462-4, 8867-4, Interpretation HH/H/N/L) |
+| **Patienten verwalten** | Anlegen (inkl. App-Zugang), Bearbeiten, Löschen mit Bestätigung |
+| **Medikation** | Erfassen, Bearbeiten, Löschen; Schema morgens – mittags – abends; Änderungen durch den Patienten werden markiert |
+| **Monatsberichte** | Eingegangene Berichte je Monat mit Verlauf des Berichtsmonats |
+| **Anrufe** (D5) | Arzt ↔ Patient in beide Richtungen inkl. Klingeln, Annehmen/Ablehnen, Gesprächsdauer, Gesprächsnotiz |
+| **Ärzte** | Anlegen, Bearbeiten (Profil, Benutzerkennung, Passwort, PIN), Löschen mit Übergabe der Patienten an einen anderen Arzt; eigenes Konto und letzter Arzt sind geschützt |
+
+### Patienten-App
+
+| Screen | Funktion |
+|---|---|
+| **Start** (M1) | Letzte Messung, Messungen von heute, Fortschritt Monatsbericht, Medikation, ungelesene Nachrichten |
+| **Messen** (M2–M4) | Erfassung per Numpad mit Kontext (Ruhe, Medikation, Symptome), Ergebnis in Ampelfarbe, Notfall-Interruption mit Notruf 112 |
+| **Monat** (M5) | Monatskalender, Versand an das Krankenhaus (erneut senden möglich), PDF für den Hausarzt |
+| **Arzt** (M6/M7) | Anruf an Arzt oder Zentrale, eingehende Anrufe, **Chat mit der Klinik** (Nachrichten lesen und beantworten, Lesebestätigung) |
+| **Medikation** | Eigene Medikation erfassen, bearbeiten, löschen |
+
+### Löschen und Nachverfolgbarkeit
+
+Patienten und Ärzte werden **nicht endgültig gelöscht** (Soft Delete): Die Anmeldung wird sofort gesperrt, offene Sitzungen und Anrufe werden beendet,
+aber Messwerte, Alarm-Quittierungen, Anrufe und Audit-Log bleiben erhalten (Aufbewahrungspflicht § 630f BGB, Nachverfolgbarkeit nach MDR / IEC 62304).
+Benutzerkennungen und E-Mail-Adressen gelöschter Konten bleiben deshalb reserviert.
+
+Alle sicherheitsrelevanten Aktionen (Alarm quittieren, Export, Anlegen/Ändern/Löschen, Nachrichten) werden im Audit-Log (`audit_logs`) protokolliert.
+
+### Demo-Modus
+
+„Demo: Upload simulieren" auf dem Board (`CARDIOPULSE_DEMO=false` zum Abschalten).
 
 ## Bewusste Vereinfachungen / offene Punkte
 
 - Echtzeit per **Polling** (5 s) statt WebSockets – Austausch gegen Laravel Reverb vorgesehen.
 - Anrufe: Signalisierung und Status sind umgesetzt, der **Sprachkanal (WebRTC/VoIP)** ist nicht angebunden.
+- **Video-Sprechstunden** mit Terminvergabe (FHIR `Appointment`) und FHIR `Encounter` fehlen noch; der FHIR-Export ist ein Download, keine REST-API mit SMART on FHIR / OAuth 2.0.
+- Keine eigene **Admin-Rolle**: Jeder angemeldete Arzt darf Ärzte verwalten.
+- Kein **Passwort ändern / Passwort vergessen** für Patienten und Ärzte.
+- Der Chat ist **kein Notfallkanal** – die App weist auf 112 hin.
 - Bluetooth-Import und Foto-Scan (OCR) sind nur in nativen Apps sinnvoll – in der Web-App erscheint ein Hinweis.
 - Hypotonie wird gemäß Mockup **weiß mit dunkler Kontur** dargestellt (Konzept nennt „Blue Ice #0288D1").
 - Bereich 130–139 / 85–89 ist im Konzept undefiniert und wird als Gelb-Orange gewertet – **mit medizinischer Leitung abstimmen**.
 - Mikro-Labels sind 12 px statt 11 px (Mindestschriftgröße laut CLAUDE.md).
+- Für den Produktivbetrieb: HTTPS erzwingen, `SESSION_ENCRYPT=true`, `APP_DEBUG=false`, `CARDIOPULSE_DEMO=false`.
 
 ## Qualitätssicherung
+
+Lokal vor jedem Commit:
 
 ```bash
 php artisan test
@@ -76,5 +115,16 @@ php artisan test
 ./vendor/bin/phpstan analyse
 npm run build
 ```
+
+### GitHub Actions (`.github/workflows/ci.yml`)
+
+Bei jedem Push auf `main` und bei jedem Pull Request:
+
+| Job | Inhalt |
+|---|---|
+| **Tests, Code-Style, statische Analyse, Build** | `npm run build`, `pint --test`, Larastan (Level 6), `php artisan test` |
+| **Sicherheitsprüfung & SBOM** | `composer audit`, `npm audit --audit-level=high`, Software Bill of Materials im CycloneDX-Format (Download als Artefakt `sbom-cyclonedx` im Workflow-Lauf) |
+
+**Dependabot** (`.github/dependabot.yml`) prüft wöchentlich Composer- und npm-Pakete sowie monatlich die GitHub Actions und erstellt bei Updates automatisch Pull Requests.
 
 Laravel Boost ist installiert; der MCP-Server ist in `.mcp.json` registriert (`php artisan boost:mcp`).
