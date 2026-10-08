@@ -30,11 +30,10 @@ if not exist database\database.sqlite (
     php artisan migrate --force
 )
 
-if not exist public\build\manifest.json (
-    echo Baue Frontend-Assets ...
-    if not exist node_modules call npm install
-    call npm run build
-)
+REM Assets bei jedem Start bauen, damit nach einem git pull kein veraltetes CSS/JS ausgeliefert wird.
+if not exist node_modules call npm install
+echo Baue Frontend-Assets ...
+call npm run build
 
 echo Starte CardioPulse auf http://127.0.0.1:%PORT% ...
 start "CardioPulse Server" /min php artisan serve --host=127.0.0.1 --port=%PORT%
