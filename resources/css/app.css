@@ -618,6 +618,7 @@ table {
 }
 
 .h-tabs a {
+    position: relative;
     display: flex;
     align-items: center;
     height: 100%;
@@ -625,17 +626,34 @@ table {
     font-size: 14px;
     color: var(--sand);
     text-decoration: none;
-    border-bottom: 3px solid transparent;
+}
+
+/* Aktiv-Markierung direkt unter dem Text statt am Rand der Leiste (dort ging sie neben den Ampelfarben unter). */
+.h-tabs a::after {
+    content: "";
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    top: calc(50% + 13px);
+    height: 3px;
+    background: transparent;
 }
 
 .h-tabs a:hover {
     color: #fff;
 }
 
+.h-tabs a:hover::after {
+    background: var(--taupe);
+}
+
 .h-tabs a[aria-current="page"] {
     color: #fff;
     font-weight: 600;
-    border-bottom-color: var(--yellow);
+}
+
+.h-tabs a[aria-current="page"]::after {
+    background: var(--yellow);
 }
 
 .h-top__right {
