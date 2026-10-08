@@ -1,0 +1,110 @@
+# Qualitätssicherung bei jedem Push und Pull Request (IEC 62304: nachvollziehbare Verifikation je Änderung).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PHP_VERSION: '8.2'
+  NODE_VERSION: '22'
+
+jobs:
+  quality:
+    name: Tests, Code-Style, statische Analyse, Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, pdo_sqlite, sqlite3, intl, bcmath
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Composer-Cache ermitteln
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Abhängigkeiten installieren
+        run: |
+          composer install --no-interaction --no-progress --prefer-dist
+          npm ci
+
+      - name: Umgebung vorbereiten
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Frontend bauen (Vite)
+        run: npm run build
+
+      - name: Code-Style (Pint)
+        run: ./vendor/bin/pint --test
+
+      - name: Statische Analyse (Larastan)
+        run: ./vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+      - name: Feature- und Unit-Tests
+        run: php artisan test
+
+  security:
+    name: Sicherheitsprüfung & SBOM
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Bekannte Schwachstellen in PHP-Paketen (composer audit)
+        run: composer audit --locked --no-interaction
+
+      - name: Bekannte Schwachstellen in npm-Paketen (npm audit)
+        run: npm audit --audit-level=high
+
+      # SOUP-Management: Software Bill of Materials aus composer.lock und package-lock.json
+      - name: SBOM erzeugen (CycloneDX)
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: cardiopulse-sbom.cdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom-cyclonedx
+          path: cardiopulse-sbom.cdx.json
+          retention-days: 90
