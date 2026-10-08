@@ -45,8 +45,15 @@ main() {
 
     "$PHP" -r 'exit(PHP_VERSION_ID >= 80200 ? 0 : 1);' \
         || fail "PHP 8.2 oder neuer nötig (gefunden: $("$PHP" -r 'echo PHP_VERSION;')). Standardversion in /conf/phpversion setzen."
-    node -e 'const [a, b] = process.versions.node.split(".").map(Number); process.exit(a > 22 || (a === 22 && b >= 12) || (a === 20 && b >= 19) ? 0 : 1)' \
-        || fail "Node.js 20.19+ oder 22.12+ nötig (gefunden: $(node -v))."
+    # Ohne Node.js (z. B. netcup-Webhosting) baut upload-assets.bat die Assets lokal und lädt sie hoch.
+    build_assets=false
+    if command -v node > /dev/null 2>&1; then
+        node -e 'const [a, b] = process.versions.node.split(".").map(Number); process.exit(a > 22 || (a === 22 && b >= 12) || (a === 20 && b >= 19) ? 0 : 1)' \
+            || fail "Node.js 20.19+ oder 22.12+ nötig (gefunden: $(node -v))."
+        build_assets=true
+    elif [ ! -f public/build/manifest.json ]; then
+        fail "Node.js fehlt und es gibt noch keine Assets – zuerst auf dem eigenen PC upload-assets.bat ausführen."
+    fi
     [ -f .env ] || fail ".env fehlt – zuerst .env.example nach .env kopieren und anpassen (siehe README, Produktivbetrieb)."
 
     if [ -f vendor/autoload.php ]; then
@@ -62,9 +69,13 @@ main() {
     composer_cmd
     "${COMPOSER[@]}" install --no-dev --optimize-autoloader --no-interaction --no-progress
 
-    echo "==> Assets bauen"
-    npm ci --no-audit --no-fund
-    npm run build
+    if $build_assets; then
+        echo "==> Assets bauen"
+        npm ci --no-audit --no-fund
+        npm run build
+    else
+        echo "==> Assets: Node.js fehlt – verwende die mit upload-assets.bat hochgeladenen Dateien"
+    fi
 
     echo "==> Datenbank"
     if grep -qE '^DB_CONNECTION=sqlite' .env && [ ! -f database/database.sqlite ]; then

@@ -13,6 +13,7 @@
 /.zed
 /auth.json
 /composer.phar
+/.deploy-target
 /node_modules
 /public/build
 /public/hot

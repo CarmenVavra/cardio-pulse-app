@@ -35,6 +35,7 @@ Umsetzung nach `CardioPulse_Projektkonzept.pdf` und den Mockups in `UI_MOCKUPS/`
 
 - `start.bat` – gleicht PHP- und npm-Pakete ab, legt die DB mit Demo-Daten an bzw. führt neue Migrationen aus, baut die Assets und startet den Server auf **http://127.0.0.1:8700**; bricht bei Fehlern mit Meldung ab
 - `stop.bat` – beendet den Server auf Port 8700
+- `upload-assets.bat` – baut CSS/JS und lädt sie auf den Server (Produktivbetrieb ohne Node.js, siehe unten)
 
 Nach einem `git pull` genügt `start.bat` – neue Pakete, Migrationen und geänderte Assets werden dabei automatisch übernommen.
 Ohne `start.bat`: `composer install`, `npm install`, `php artisan migrate`, `npm run build`.
@@ -127,6 +128,8 @@ Validierungsmeldungen sind deutsch (`lang/de/validation.php`).
 
 Die App liegt **außerhalb** des öffentlichen Bereichs; aus dem Internet erreichbar ist nur `public/`.
 
+Die SSH-Shell des netcup-Webhostings hat **kein Node.js** – CSS/JS baut deshalb der eigene PC mit `upload-assets.bat` und lädt sie per SSH hoch (Windows-Bordmittel `tar` und `ssh`; der SSH-Zugang wird in `.deploy-target` gemerkt, nicht in Git). Gibt es auf dem Server Node.js, baut `deploy.sh` die Assets selbst.
+
 ### Einmalig im netcup-Panel
 
 1. Im CCP den **Vertrag zur Auftragsverarbeitung (AVV)** abschließen – CardioPulse speichert Gesundheitsdaten.
@@ -148,14 +151,16 @@ In der `.env` anpassen:
 | Variable | Wert |
 |---|---|
 | `APP_ENV` / `APP_DEBUG` | `production` / `false` |
-| `APP_URL` | `https://cardio.deine-domain.de` |
+| `APP_URL` | `https://cardiopulse.caryssa.at` |
 | `LOG_LEVEL` | `warning` |
 | `SESSION_ENCRYPT` / `SESSION_SECURE_COOKIE` | `true` / `true` |
 | `CARDIOPULSE_DEMO` | `false` (kein Demo-Upload auf dem Board) |
 | `DB_CONNECTION` | `sqlite` (Datei `database/database.sqlite` wird angelegt) – alternativ MariaDB mit `mysql` und `DB_*` |
 | `TRUSTED_PROXIES` | leer lassen (nur hinter einem eigenen Reverse-Proxy setzen) |
 
-Dann installieren und den ersten Arzt-Zugang anlegen (**keine Demo-Daten** – dieser Arzt legt alle weiteren Ärzte und Patienten in der App an):
+Gibt es eine Zeile doppelt, gilt die untere – geänderte Werte daher direkt in der vorhandenen Zeile eintragen.
+
+Auf dem eigenen PC `upload-assets.bat` ausführen, dann auf dem Server installieren und den ersten Arzt-Zugang anlegen (**keine Demo-Daten** – dieser Arzt legt alle weiteren Ärzte und Patienten in der App an):
 
 ```bash
 ./deploy.sh
@@ -166,11 +171,14 @@ Zum Schluss im Panel den **Document Root** der Domain auf `/cardio-pulse/public`
 
 ### Updates
 
-```bash
-cd cardio-pulse && ./deploy.sh
-```
+1. Änderungen auf GitHub pushen, dann auf dem eigenen PC `upload-assets.bat` ausführen (nur nötig, wenn sich CSS/JS geändert hat; warnt, wenn der lokale Stand von GitHub abweicht).
+2. Auf dem Server:
 
-`deploy.sh` schaltet die App in den Wartungsmodus, holt den neuesten Stand von GitHub, gleicht PHP- und npm-Pakete ab (lädt Composer als `composer.phar`, falls der Befehl fehlt), baut die Assets, führt Migrationen aus, erneuert die Caches und bricht beim ersten Fehler ab. Prüft vorher PHP (8.2+) und Node.js (20.19+ / 22.12+). Eine andere PHP-Version als den Shell-Standard nutzt `PHP=/usr/local/php83/bin/php ./deploy.sh`.
+   ```bash
+   cd cardio-pulse && ./deploy.sh
+   ```
+
+`deploy.sh` schaltet die App in den Wartungsmodus, holt den neuesten Stand von GitHub, gleicht die PHP-Pakete ab (lädt Composer als `composer.phar`, falls der Befehl fehlt), baut die Assets (nur mit Node.js 20.19+ / 22.12+), führt Migrationen aus, erneuert die Caches und bricht beim ersten Fehler ab. Eine andere PHP-Version als den Shell-Standard nutzt `PHP=/usr/local/php83/bin/php ./deploy.sh`.
 
 **Sicherung:** `database/database.sqlite` und `.env` (enthält den Schlüssel `APP_KEY`).
 
