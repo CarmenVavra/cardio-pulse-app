@@ -123,34 +123,56 @@ Validierungsmeldungen sind deutsch (`lang/de/validation.php`).
 - Bereich 130–139 / 85–89 ist im Konzept undefiniert und wird als Gelb-Orange gewertet – **mit medizinischer Leitung abstimmen**.
 - Mikro-Labels sind 12 px statt 11 px (Mindestschriftgröße laut CLAUDE.md).
 
-## Produktivbetrieb (z. B. netcup)
+## Produktivbetrieb (netcup-Webhosting)
 
-Checkliste für das Hosting:
+Die App liegt **außerhalb** des öffentlichen Bereichs; aus dem Internet erreichbar ist nur `public/`.
 
-1. **Document Root** auf den Ordner `public/` setzen (nie auf das Projektverzeichnis).
-2. PHP **8.2 oder neuer** mit den Laravel-Standarderweiterungen (`mbstring`, `openssl`, `pdo_sqlite` bzw. `pdo_mysql`, `tokenizer`, `xml`, `ctype`, `fileinfo`).
-3. `.env` aus `.env.example` erstellen und anpassen:
-   - `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://…`, `php artisan key:generate`
-   - `CARDIOPULSE_DEMO=false` (kein Demo-Upload auf dem Board)
-   - `SESSION_ENCRYPT=true`, `SESSION_SECURE_COOKIE=true`
-   - Datenbank: SQLite (`database/database.sqlite`, Ordner beschreibbar) oder MySQL/MariaDB über `DB_CONNECTION=mysql` und `DB_*`
-   - `TRUSTED_PROXIES` nur setzen, wenn ein Reverse-Proxy/Load-Balancer vorgeschaltet ist (sonst leer lassen)
-4. SSL-Zertifikat aktivieren (z. B. Let's Encrypt im Hosting-Panel) und HTTP auf HTTPS umleiten.
-5. Deployment:
+### Einmalig im netcup-Panel
 
-   ```bash
-   composer install --no-dev --optimize-autoloader
-   npm ci && npm run build
-   php artisan migrate --force
-   php artisan config:cache && php artisan route:cache && php artisan view:cache
-   ```
+1. Im CCP den **Vertrag zur Auftragsverarbeitung (AVV)** abschließen – CardioPulse speichert Gesundheitsdaten.
+2. (Sub-)Domain anlegen, **Let's-Encrypt-Zertifikat** ausstellen und HTTP dauerhaft auf HTTPS umleiten.
+3. **PHP 8.3** für die Domain einstellen und dieselbe Version als Shell-Standard in `/conf/phpversion` eintragen (Anleitung: `/conf-options/phpversion.readme`). Benötigte Erweiterungen: `pdo_sqlite`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `fileinfo`.
+4. Unter „Webhosting-Zugang“ ein SSH-Passwort setzen.
 
-6. Schreibrechte für `storage/` und `bootstrap/cache/`.
-7. **Keine Demo-Daten** einspielen (`--seed` weglassen) und den ersten Arzt-Zugang anlegen – danach legt dieser alle weiteren Ärzte und Patienten in der App an:
+### Erstinstallation per SSH
 
-   ```bash
-   php artisan cardiopulse:create-doctor
-   ```
+```bash
+git clone https://github.com/CarmenVavra/cardio-pulse-app.git cardio-pulse
+cd cardio-pulse
+cp .env.example .env
+nano .env
+```
+
+In der `.env` anpassen:
+
+| Variable | Wert |
+|---|---|
+| `APP_ENV` / `APP_DEBUG` | `production` / `false` |
+| `APP_URL` | `https://cardio.deine-domain.de` |
+| `LOG_LEVEL` | `warning` |
+| `SESSION_ENCRYPT` / `SESSION_SECURE_COOKIE` | `true` / `true` |
+| `CARDIOPULSE_DEMO` | `false` (kein Demo-Upload auf dem Board) |
+| `DB_CONNECTION` | `sqlite` (Datei `database/database.sqlite` wird angelegt) – alternativ MariaDB mit `mysql` und `DB_*` |
+| `TRUSTED_PROXIES` | leer lassen (nur hinter einem eigenen Reverse-Proxy setzen) |
+
+Dann installieren und den ersten Arzt-Zugang anlegen (**keine Demo-Daten** – dieser Arzt legt alle weiteren Ärzte und Patienten in der App an):
+
+```bash
+./deploy.sh
+php artisan cardiopulse:create-doctor
+```
+
+Zum Schluss im Panel den **Document Root** der Domain auf `/cardio-pulse/public` setzen.
+
+### Updates
+
+```bash
+cd cardio-pulse && ./deploy.sh
+```
+
+`deploy.sh` schaltet die App in den Wartungsmodus, holt den neuesten Stand von GitHub, gleicht PHP- und npm-Pakete ab, baut die Assets, führt Migrationen aus, erneuert die Caches und bricht beim ersten Fehler ab. Prüft vorher PHP (8.2+) und Node.js (20.19+ / 22.12+). Eine andere PHP-Version als den Shell-Standard nutzt `PHP=/usr/local/php83/bin/php ./deploy.sh`.
+
+**Sicherung:** `database/database.sqlite` und `.env` (enthält den Schlüssel `APP_KEY`).
 
 ## Qualitätssicherung
 
