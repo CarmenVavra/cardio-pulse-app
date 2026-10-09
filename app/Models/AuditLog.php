@@ -5,9 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Unveränderliches Prüfprotokoll (Nachverfolgbarkeit nach IEC 62304 / MDR).
+ *
+ * @property string $action
+ * @property array<string, mixed>|null $details
+ * @property string|null $ip_address
+ * @property Carbon $created_at
  */
 class AuditLog extends Model
 {

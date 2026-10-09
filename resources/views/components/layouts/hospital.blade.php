@@ -10,6 +10,9 @@
     if ($user?->can('manage-doctors')) {
         $tabs['doctors'] = ['Ärzte', route('doctors.index')];
     }
+    if ($user?->can('view-audit-log')) {
+        $tabs['audit'] = ['Protokoll', route('audit.index')];
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="de">

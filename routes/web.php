@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\StaffLoginController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Hospital\AccountController;
 use App\Http\Controllers\Hospital\AlarmController;
+use App\Http\Controllers\Hospital\AuditLogController;
 use App\Http\Controllers\Hospital\BoardController;
 use App\Http\Controllers\Hospital\CallController;
 use App\Http\Controllers\Hospital\DemoUploadController;
@@ -112,6 +113,11 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
                 Route::put('/aerzte/{doctor}', [HospitalDoctorController::class, 'update'])->name('doctors.update');
                 Route::delete('/aerzte/{doctor}', [HospitalDoctorController::class, 'destroy'])->name('doctors.destroy');
                 Route::delete('/aerzte/{doctor}/zwei-faktor', [HospitalDoctorController::class, 'resetTwoFactor'])->name('doctors.two-factor.destroy');
+            });
+
+            Route::middleware('can:view-audit-log')->group(function () {
+                Route::get('/protokoll', [AuditLogController::class, 'index'])->name('audit.index');
+                Route::get('/protokoll/export', [AuditLogController::class, 'export'])->middleware('throttle:10,1')->name('audit.export');
             });
 
             Route::get('/anrufe', [CallController::class, 'index'])->name('calls.index');

@@ -47,6 +47,9 @@ class AppServiceProvider extends ServiceProvider
         // Ärzteverwaltung nur für Admins.
         Gate::define('manage-doctors', fn (User $user) => $user->isAdmin());
 
+        // Prüfprotokoll (enthält Patientennamen und IP-Adressen) nur für Admins.
+        Gate::define('view-audit-log', fn (User $user) => $user->isAdmin());
+
         // {doctor} in Routen löst nur aktive Ärzte (Personal) auf.
         Route::bind('doctor', fn (string $value) => User::query()
             ->where('role', UserRole::Staff)

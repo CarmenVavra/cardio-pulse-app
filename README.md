@@ -84,6 +84,7 @@ Die Ampelfarbe (`app/Enums/BloodPressureStatus.php`) ist in App und Krankenhaus 
 | **Monatsberichte** | Eingegangene Berichte je Monat mit Verlauf des Berichtsmonats |
 | **Anrufe** (D5) | Arzt ↔ Patient in beide Richtungen inkl. Klingeln, Annehmen/Ablehnen, Gesprächsdauer, Gesprächsnotiz |
 | **Ärzte** (nur Admins) | Anlegen, Bearbeiten (Profil, Benutzerkennung, Passwort, PIN, Admin-Rechte, Zwei-Faktor-Anmeldung zurücksetzen), Löschen mit Übergabe der Patienten an einen anderen Arzt; eigenes Konto, eigene Admin-Rechte und letzter Arzt sind geschützt |
+| **Protokoll** (nur Admins) | Prüfprotokoll aller sicherheitsrelevanten Aktionen, neueste zuerst: Zeit, Bereich, Aktion, Benutzer, betroffener Patient/Arzt, Details, IP-Adresse; Filter nach Zeitraum, Bereich und Arzt; Export als CSV (Excel-tauglich, Schutz vor CSV-Injection; der Export wird selbst protokolliert) |
 | **Mein Konto** (Klick auf den eigenen Namen oben rechts) | Eigenes Passwort und Privacy-Lock-PIN ändern, Zwei-Faktor-Anmeldung einrichten (QR-Code), Wiederherstellungscodes erneuern |
 
 ### Patienten-App
@@ -103,7 +104,7 @@ Patienten und Ärzte werden **nicht endgültig gelöscht** (Soft Delete): Die An
 aber Messwerte, Alarm-Quittierungen, Anrufe und Audit-Log bleiben erhalten (Aufbewahrungspflicht § 630f BGB, Nachverfolgbarkeit nach MDR / IEC 62304).
 Benutzerkennungen und E-Mail-Adressen gelöschter Konten bleiben deshalb reserviert.
 
-Alle sicherheitsrelevanten Aktionen (Alarm quittieren, Export, Anlegen/Ändern/Löschen, Nachrichten) werden im Audit-Log (`audit_logs`) protokolliert.
+Alle sicherheitsrelevanten Aktionen (Alarm quittieren, Export, Anlegen/Ändern/Löschen, Nachrichten) werden im Audit-Log (`audit_logs`) protokolliert – Admins sehen es unter „Protokoll“.
 
 ### Sicherheit
 
@@ -132,6 +133,7 @@ Validierungsmeldungen und E-Mails sind deutsch (`lang/de/validation.php`, `lang/
 - Echtzeit per **Polling** (5 s) statt WebSockets – Austausch gegen Laravel Reverb vorgesehen.
 - Anrufe: Signalisierung und Status sind umgesetzt, der **Sprachkanal (WebRTC/VoIP)** ist nicht angebunden.
 - **Video-Sprechstunden** mit Terminvergabe (FHIR `Appointment`) und FHIR `Encounter` fehlen noch; der FHIR-Export ist ein Download, keine REST-API mit SMART on FHIR / OAuth 2.0.
+- **Idee: Standort im Notfall** – Patienten, die ausdrücklich einwilligen (widerrufbar), übermitteln bei einem roten Wert bzw. im Notfall-Screen ihren aktuellen Standort; das Krankenhaus sieht ihn im Alarm mit Kartenlink, damit die Rettung nicht an die Wohnadresse fährt. In der Web-App nur, solange sie geöffnet ist (Browser-Ortung mit Freigabe), kein Dauer-Tracking im Hintergrund – das ginge nur mit einer nativen App. Standort nur im Notfall speichern, nach Abschluss des Alarms löschen, Zugriffe protokollieren (Art. 9 DSGVO).
 - Die **Privacy-Lock-PIN** lässt sich nicht per E-Mail zurücksetzen – ein Admin setzt sie unter „Ärzte“ neu.
 - Der Chat ist **kein Notfallkanal** – die App weist auf den Notruf hin (Standard **144**, Rettung Österreich; in Deutschland `CARDIOPULSE_EMERGENCY_NUMBER=112`).
 - Bluetooth-Import und Foto-Scan (OCR) sind nur in nativen Apps sinnvoll – in der Web-App erscheint ein Hinweis.
