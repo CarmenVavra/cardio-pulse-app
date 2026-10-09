@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\PatientLoginController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\StaffLoginController;
 use App\Http\Controllers\Hospital\AccountController;
 use App\Http\Controllers\Hospital\AlarmController;
@@ -39,6 +41,17 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/app/login', [PatientLoginController::class, 'create'])->name('patient.login');
     Route::post('/app/login', [PatientLoginController::class, 'store'])->middleware('throttle:10,1');
+
+    // Passwort vergessen: Link per E-Mail (Ärzte und Patienten mit eigener Ansicht).
+    Route::get('/passwort-vergessen', [ForgotPasswordController::class, 'create'])->name('password.request');
+    Route::post('/passwort-vergessen', [ForgotPasswordController::class, 'store'])->middleware('throttle:5,1')->name('password.email');
+    Route::get('/passwort-zuruecksetzen/{token}', [ResetPasswordController::class, 'create'])->name('password.reset');
+    Route::post('/passwort-zuruecksetzen', [ResetPasswordController::class, 'store'])->middleware('throttle:10,1')->name('password.update');
+
+    Route::get('/app/passwort-vergessen', [ForgotPasswordController::class, 'create'])->name('patient.password.request');
+    Route::post('/app/passwort-vergessen', [ForgotPasswordController::class, 'store'])->middleware('throttle:5,1')->name('patient.password.email');
+    Route::get('/app/passwort-zuruecksetzen/{token}', [ResetPasswordController::class, 'create'])->name('patient.password.reset');
+    Route::post('/app/passwort-zuruecksetzen', [ResetPasswordController::class, 'store'])->middleware('throttle:10,1')->name('patient.password.update');
 });
 
 Route::post('/logout', LogoutController::class)->middleware('auth')->name('logout');

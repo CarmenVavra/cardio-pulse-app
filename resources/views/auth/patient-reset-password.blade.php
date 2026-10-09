@@ -1,0 +1,33 @@
+<x-layouts.patient title="Neues Passwort" :poll="false">
+    <x-slot:header>
+        <x-patient-auth-header heading="Neues Passwort" />
+    </x-slot:header>
+
+    <div class="p-login">
+        <p class="advice">Mindestens 8 Zeichen mit Buchstaben und Ziffern. Danach werden Sie auf allen Geräten abgemeldet.</p>
+
+        @if ($errors->any())
+            <div class="alert alert--error" role="alert">{{ $errors->first() }}</div>
+        @endif
+
+        <form method="POST" action="{{ route('patient.password.update') }}" class="stack stack--sm">
+            @csrf
+            <input type="hidden" name="token" value="{{ $token }}">
+            <div class="field">
+                <label class="field__label" for="email">E-Mail</label>
+                <input class="input" id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="email" inputmode="email" required autofocus @error('email') aria-invalid="true" @enderror>
+            </div>
+            <div class="field">
+                <label class="field__label" for="password">Neues Passwort</label>
+                <input class="input" id="password" name="password" type="password" autocomplete="new-password" minlength="8" required @error('password') aria-invalid="true" @enderror>
+            </div>
+            <div class="field">
+                <label class="field__label" for="password_confirmation">Neues Passwort wiederholen</label>
+                <input class="input" id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8" required>
+            </div>
+            <button type="submit" class="btn btn--primary btn--lg btn--block">Passwort speichern <span aria-hidden="true">→</span></button>
+        </form>
+
+        <p class="meta push-down"><a href="{{ route('patient.password.request') }}">Neuen Link anfordern</a></p>
+    </div>
+</x-layouts.patient>

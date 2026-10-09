@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
+use App\Notifications\ResetPasswordNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -103,6 +104,16 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->isStaff() && $this->is_admin;
+    }
+
+    /**
+     * Deutsche E-Mail mit passendem Link (Patienten-App bzw. Krankenhaus).
+     *
+     * @param  string  $token
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     public function displayName(): string
