@@ -36,6 +36,7 @@ Umsetzung nach `CardioPulse_Projektkonzept.pdf` und den Mockups in `UI_MOCKUPS/`
 - `start.bat` – gleicht PHP- und npm-Pakete ab, legt die DB mit Demo-Daten an bzw. führt neue Migrationen aus, baut die Assets und startet den Server auf **http://127.0.0.1:8700**; bricht bei Fehlern mit Meldung ab
 - `stop.bat` – beendet den Server auf Port 8700
 - `upload-assets.bat` – baut CSS/JS und lädt sie auf den Server (Produktivbetrieb ohne Node.js, siehe unten)
+- `backup.bat` – holt eine Sicherung von Datenbank und `.env` vom Server nach `backups\` (siehe unten)
 
 Nach einem `git pull` genügt `start.bat` – neue Pakete, Migrationen und geänderte Assets werden dabei automatisch übernommen.
 Ohne `start.bat`: `composer install`, `npm install`, `php artisan migrate`, `npm run build`.
@@ -49,7 +50,7 @@ Ohne `start.bat`: `composer install`, `npm install`, `php artisan migrate`, `npm
 
 ## Testzugänge (nur lokal, aus `database/seeders/DatabaseSeeder.php`)
 
-- Krankenhaus: Benutzerkennung `m.weber`, Passwort `cardiopulse`, Privacy-Lock-PIN `123456`
+- Krankenhaus: Benutzerkennung `m.weber` (Admin), Passwort `cardiopulse`, Privacy-Lock-PIN `123456` – `t.krause` ist Arzt ohne Admin-Rechte
 - Patienten-App: `josef.brandner@cardiopulse.test` (bzw. `vorname.nachname@cardiopulse.test`), Passwort `cardiopulse`
 
 Demo-Daten neu erzeugen: `php artisan migrate:fresh --seed`
@@ -70,7 +71,7 @@ Demo-Daten neu erzeugen: `php artisan migrate:fresh --seed`
 | **Medikation** | Erfassen, Bearbeiten, Löschen; Schema morgens – mittags – abends; Änderungen durch den Patienten werden markiert |
 | **Monatsberichte** | Eingegangene Berichte je Monat mit Verlauf des Berichtsmonats |
 | **Anrufe** (D5) | Arzt ↔ Patient in beide Richtungen inkl. Klingeln, Annehmen/Ablehnen, Gesprächsdauer, Gesprächsnotiz |
-| **Ärzte** | Anlegen, Bearbeiten (Profil, Benutzerkennung, Passwort, PIN), Löschen mit Übergabe der Patienten an einen anderen Arzt; eigenes Konto und letzter Arzt sind geschützt |
+| **Ärzte** (nur Admins) | Anlegen, Bearbeiten (Profil, Benutzerkennung, Passwort, PIN, Admin-Rechte), Löschen mit Übergabe der Patienten an einen anderen Arzt; eigenes Konto, eigene Admin-Rechte und letzter Arzt sind geschützt |
 | **Mein Konto** (Klick auf den eigenen Namen oben rechts) | Eigenes Passwort und Privacy-Lock-PIN ändern |
 
 ### Patienten-App
@@ -96,6 +97,8 @@ Alle sicherheitsrelevanten Aktionen (Alarm quittieren, Export, Anlegen/Ändern/L
 
 | Maßnahme | Umsetzung |
 |---|---|
+| Admin-Rolle | Nur Admins sehen und nutzen „Ärzte“ (anlegen, bearbeiten, löschen, Admin-Rechte vergeben). Die eigenen Admin-Rechte kann nur ein anderer Admin entziehen – so bleibt immer mindestens ein Admin |
+| Passwort vergessen | Link per E-Mail (60 Min gültig, nur einmal verwendbar, max. 1 Anforderung pro Minute und Konto); die Antwort verrät nicht, ob es ein Konto gibt; die E-Mail-Adresse steht nicht im Link; nach dem Zurücksetzen enden alle Sitzungen. Ärzte und Patienten haben je eine eigene Ansicht |
 | Passwort-Raten | Nach 5 Fehlversuchen ist die Anmeldung für dieses Konto (je IP-Adresse) 5 Minuten gesperrt; zusätzlich max. 10 Login-Anfragen pro Minute je IP |
 | Privacy-Lock-PIN | Nach 5 falschen PINs wird die Sitzung beendet; die Meldung zeigt die verbleibenden Versuche |
 | Passwörter | Einheitlich mind. 8 Zeichen mit Buchstaben und Ziffern (Anlegen, Bearbeiten, eigenes Konto); beim Ändern ist das aktuelle Passwort nötig und alle anderen Sitzungen werden abgemeldet |
@@ -103,9 +106,9 @@ Alle sicherheitsrelevanten Aktionen (Alarm quittieren, Export, Anlegen/Ändern/L
 | Sitzungen | Datenbank-Sessions, verschlüsselt (`SESSION_ENCRYPT=true`), Abmeldung nach 120 Min ohne Anfrage |
 | HTTP-Header | `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`; HSTS bei HTTPS |
 | HTTPS | Im Produktivbetrieb (`APP_ENV=production`) werden alle Links auf HTTPS erzeugt |
-| Audit-Log | Anmeldungen, Fehlversuche, Sperren, Passwort- und PIN-Änderungen werden protokolliert |
+| Audit-Log | Anmeldungen, Fehlversuche, Sperren, Passwort- und PIN-Änderungen, angeforderte und durchgeführte Passwort-Zurücksetzungen werden protokolliert |
 
-Validierungsmeldungen sind deutsch (`lang/de/validation.php`).
+Validierungsmeldungen und E-Mails sind deutsch (`lang/de/validation.php`, `lang/de/passwords.php`, `lang/de.json`).
 
 ### Demo-Modus
 
@@ -116,8 +119,7 @@ Validierungsmeldungen sind deutsch (`lang/de/validation.php`).
 - Echtzeit per **Polling** (5 s) statt WebSockets – Austausch gegen Laravel Reverb vorgesehen.
 - Anrufe: Signalisierung und Status sind umgesetzt, der **Sprachkanal (WebRTC/VoIP)** ist nicht angebunden.
 - **Video-Sprechstunden** mit Terminvergabe (FHIR `Appointment`) und FHIR `Encounter` fehlen noch; der FHIR-Export ist ein Download, keine REST-API mit SMART on FHIR / OAuth 2.0.
-- Keine eigene **Admin-Rolle**: Jeder angemeldete Arzt darf Ärzte verwalten.
-- Kein **Passwort vergessen** (Zurücksetzen per E-Mail) – Ärzte können Passwörter anderer Ärzte unter „Ärzte“ neu setzen, Patienten-Passwörter unter „Patienten bearbeiten“.
+- Die **Privacy-Lock-PIN** lässt sich nicht per E-Mail zurücksetzen – ein Admin setzt sie unter „Ärzte“ neu.
 - Der Chat ist **kein Notfallkanal** – die App weist auf 112 hin.
 - Bluetooth-Import und Foto-Scan (OCR) sind nur in nativen Apps sinnvoll – in der Web-App erscheint ein Hinweis.
 - Hypotonie wird **blau** dargestellt („Blue Ice“ laut Konzept, für WCAG-AA-Kontrast mit weißer Schrift leicht abgedunkelt: `#0277BD` statt `#0288D1`). Das Mockup sah weiß vor – das war zu unauffällig.
@@ -157,10 +159,11 @@ In der `.env` anpassen:
 | `CARDIOPULSE_DEMO` | `false` (kein Demo-Upload auf dem Board) |
 | `DB_CONNECTION` | `sqlite` (Datei `database/database.sqlite` wird angelegt) – alternativ MariaDB mit `mysql` und `DB_*` |
 | `TRUSTED_PROXIES` | leer lassen (nur hinter einem eigenen Reverse-Proxy setzen) |
+| `MAIL_*` | Postfach für „Passwort vergessen“, siehe unten |
 
 Gibt es eine Zeile doppelt, gilt die untere – geänderte Werte daher direkt in der vorhandenen Zeile eintragen.
 
-Auf dem eigenen PC `upload-assets.bat` ausführen, dann auf dem Server installieren und den ersten Arzt-Zugang anlegen (**keine Demo-Daten** – dieser Arzt legt alle weiteren Ärzte und Patienten in der App an):
+Auf dem eigenen PC `upload-assets.bat` ausführen, dann auf dem Server installieren und den ersten Arzt-Zugang anlegen (**keine Demo-Daten** – der erste Arzt wird automatisch Admin und legt alle weiteren Ärzte und Patienten in der App an):
 
 ```bash
 ./deploy.sh
@@ -168,6 +171,24 @@ php artisan cardiopulse:create-doctor
 ```
 
 Zum Schluss im Panel den **Document Root** der Domain auf `/cardio-pulse/public` setzen.
+
+Ist kein Admin mehr erreichbar, vergibt `php artisan cardiopulse:make-admin <benutzerkennung>` die Admin-Rechte auf dem Server.
+
+### E-Mail (Passwort vergessen)
+
+Im netcup-Panel ein Postfach anlegen (z. B. `noreply@caryssa.at`) und in der `.env` eintragen. Server-Name und Port stehen im Panel bei den E-Mail-Einstellungen:
+
+```ini
+MAIL_MAILER=smtp
+MAIL_SCHEME=smtps
+MAIL_HOST=<SMTP-Server laut netcup-Panel>
+MAIL_PORT=465
+MAIL_USERNAME=noreply@caryssa.at
+MAIL_PASSWORD=<Passwort des Postfachs>
+MAIL_FROM_ADDRESS=noreply@caryssa.at
+```
+
+Danach `php artisan optimize:clear`. Die E-Mails werden sofort gesendet (kein Queue-Worker nötig). Ist der Mailserver nicht erreichbar, steht der Fehler in `storage/logs/laravel.log` – der Besucher sieht dieselbe Meldung wie immer.
 
 ### Updates
 
@@ -180,7 +201,15 @@ Zum Schluss im Panel den **Document Root** der Domain auf `/cardio-pulse/public`
 
 `deploy.sh` schaltet die App in den Wartungsmodus, holt den neuesten Stand von GitHub, gleicht die PHP-Pakete ab (lädt Composer als `composer.phar`, falls der Befehl fehlt), baut die Assets (nur mit Node.js 20.19+ / 22.12+), führt Migrationen aus, leert die Laravel-Caches und bricht beim ersten Fehler ab. Eine andere PHP-Version als den Shell-Standard nutzt `PHP=/usr/local/php83/bin/php ./deploy.sh`. Konfiguration, Routen und Views werden bewusst nicht gecacht: Die netcup-SSH-Shell sieht das Projekt unter `/cardio-pulse`, der Webserver unter `/var/www/vhosts/…/cardio-pulse` – ein Cache aus der Shell enthielte falsche Pfade.
 
-**Sicherung:** `database/database.sqlite` und `.env` (enthält den Schlüssel `APP_KEY`).
+### Datensicherung
+
+`backup.bat` (Doppelklick auf dem eigenen PC) legt auf dem Server mit `php artisan cardiopulse:backup` einen Schnappschuss der Datenbank an (`VACUUM INTO` – in sich stimmig, auch während Messwerte eintreffen) und lädt ihn zusammen mit der `.env` (enthält `APP_KEY`) als `backups\cardiopulse-JJJJ-MM-TT_HHMM.tar.gz` herunter. Der Ordner `backups\` ist nicht in Git.
+
+Auf dem Server bleiben die neuesten 14 Schnappschüsse in `storage/app/backups/`. Für eine tägliche Sicherung ohne PC im netcup-Panel unter „Geplante Aufgaben“ den Befehl `cd /cardio-pulse && /usr/local/php83/bin/php artisan cardiopulse:backup` eintragen.
+
+**Wiederherstellen:** Archiv entpacken, die `.sqlite`-Datei als `database/database.sqlite` und die `.env` auf den Server kopieren, dann `./deploy.sh`.
+
+Die Sicherungen enthalten Gesundheitsdaten – verschlüsselt aufbewahren (z. B. BitLocker-USB-Stick), nicht per E-Mail versenden.
 
 ## Qualitätssicherung
 
