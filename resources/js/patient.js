@@ -1,4 +1,5 @@
 import { getJson, initCallScreen, initCommon, storage } from './common';
+import { initVideoCall } from './video-call';
 
 /**
  * Patienten-App: Numpad-Erfassung, Notfall-Bestätigung, Erinnerung, eingehende Anrufe.
@@ -6,6 +7,7 @@ import { getJson, initCallScreen, initCommon, storage } from './common';
 
 initCommon();
 initCallScreen();
+initVideoCall();
 
 /* ------------------------------------------------------------------ Eingehender Anruf (M7) */
 

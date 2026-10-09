@@ -18,6 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [SecurityHeaders::class]);
 
+        // WebRTC-Nachrichten unverändert lassen: Ein Angebot (SDP) muss mit einem Zeilenumbruch
+        // enden – getrimmt lehnt der Browser es als ungültig ab.
+        $isSignal = fn (Request $request) => $request->is('anrufe/*/signale', 'app/anrufe/*/signale');
+        $middleware->trimStrings(except: [$isSignal]);
+        $middleware->convertEmptyStringsToNull(except: [$isSignal]);
+
         $middleware->alias([
             'role' => EnsureRole::class,
             'unlocked' => EnsureScreenUnlocked::class,

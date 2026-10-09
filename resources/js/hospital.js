@@ -1,4 +1,5 @@
 import { formatDuration, getJson, initCallScreen, initCommon, postForm, storage } from './common';
+import { initVideoCall } from './video-call';
 
 /**
  * Krankenhaus-Dashboard: Live-Board (Polling), Alarm mit Signalton, Privacy-Lock, eingehende Anrufe.
@@ -6,6 +7,7 @@ import { formatDuration, getJson, initCallScreen, initCommon, postForm, storage 
 
 initCommon();
 initCallScreen();
+initVideoCall();
 
 const body = document.body;
 const page = body.dataset.page;

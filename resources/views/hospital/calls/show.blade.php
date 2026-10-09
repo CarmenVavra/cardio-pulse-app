@@ -5,7 +5,7 @@
     $patient = $call->patient;
     $isOpen = $call->status->isOpen();
     $kicker = match ($call->status) {
-        CallStatus::Active => 'LAUFENDES GESPRÄCH · VERSCHLÜSSELT',
+        CallStatus::Active => 'VIDEOSPRECHSTUNDE · ENDE-ZU-ENDE VERSCHLÜSSELT',
         CallStatus::Ringing => $call->direction === CallDirection::ToPatient ? 'VERBINDE · KLINGELT BEI PATIENT' : 'EINGEHENDER ANRUF · APP',
         CallStatus::Ended => 'GESPRÄCH BEENDET',
         CallStatus::Declined => 'NICHT ANGENOMMEN',
@@ -17,21 +17,25 @@
          data-status-url="{{ route('calls.status', $call) }}"
          data-status="{{ $call->status->value }}"
          data-elapsed="{{ $call->durationSeconds() }}">
-        <section class="call-stage" aria-labelledby="call-name">
+        <section @class(['call-stage', 'call-stage--video' => $call->status === CallStatus::Active]) aria-labelledby="call-name">
             <div class="call-stage__kicker">{{ $kicker }}</div>
             <h1 class="call-stage__name" id="call-name">{{ $patient->fullName() }}</h1>
             <div class="call-stage__info">
-                App-Anruf · {{ $patient->phone }} · {{ $call->answered_at ? 'seit '.$call->answered_at->format('H:i') : 'gestartet '.$call->created_at->format('H:i') }}
+                Videosprechstunde · Telefon {{ $patient->phone }} · {{ $call->answered_at ? 'seit '.$call->answered_at->format('H:i') : 'gestartet '.$call->created_at->format('H:i') }}
                 @if ($call->user) · {{ $call->user->shortName() }} @endif
             </div>
             <div class="call-stage__timer" data-call-timer aria-live="off">
                 {{ $call->answered_at ? \App\Support\Format::duration($call->durationSeconds()) : '--:--' }}
             </div>
-            <div @class(['wave', 'is-idle' => $call->status !== CallStatus::Active]) data-wave aria-hidden="true">
-                @for ($i = 0; $i < 40; $i++)
-                    <span style="height:{{ 6 + (($i * 37) % 30) }}px"></span>
-                @endfor
-            </div>
+            @if ($call->status === CallStatus::Active)
+                <x-video-call :signal-url="route('calls.signals.index', $call)" role="offerer" :ice-servers="$iceServers" :peer-name="$patient->fullName()" />
+            @else
+                <div class="wave is-idle" data-wave aria-hidden="true">
+                    @for ($i = 0; $i < 40; $i++)
+                        <span style="height:{{ 6 + (($i * 37) % 30) }}px"></span>
+                    @endfor
+                </div>
+            @endif
 
             @if ($isOpen)
                 <div class="call-controls">
@@ -40,10 +44,6 @@
                             @csrf
                             <button type="submit" class="btn btn--success btn--block" style="min-height:60px">Annehmen <x-icon name="phone" size="20" stroke="2.4" /></button>
                         </form>
-                    @else
-                        <button type="button" class="btn btn--outline-taupe" aria-pressed="false" data-toggle><span class="btn__lead"><x-icon name="mic-off" size="18" />Stumm</span></button>
-                        <button type="button" class="btn btn--outline-taupe" aria-pressed="false" data-toggle><span class="btn__lead"><x-icon name="volume-2" size="18" />Lautsprecher</span></button>
-                        <button type="button" class="btn btn--outline-taupe" aria-pressed="false" data-toggle><span class="btn__lead"><x-icon name="pause" size="18" />Halten</span></button>
                     @endif
                     <form method="POST" action="{{ route('calls.end', $call) }}">
                         @csrf

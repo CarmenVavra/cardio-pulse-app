@@ -4,10 +4,13 @@ namespace App\Providers;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Middleware\TrustProxies;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -46,6 +49,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Ärzteverwaltung nur für Admins.
         Gate::define('manage-doctors', fn (User $user) => $user->isAdmin());
+
+        // Videosprechstunde: Verbindungsaufbau fragt knapp jede Sekunde nach – großzügiges, aber begrenztes Limit.
+        RateLimiter::for('video', fn (Request $request) => Limit::perMinute(300)->by((string) ($request->user()->id ?? $request->ip())));
 
         // Prüfprotokoll (enthält Patientennamen und IP-Adressen) nur für Admins.
         Gate::define('view-audit-log', fn (User $user) => $user->isAdmin());

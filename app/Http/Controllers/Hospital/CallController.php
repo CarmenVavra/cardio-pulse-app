@@ -7,6 +7,7 @@ use App\Http\Requests\SaveCallNoteRequest;
 use App\Models\Call;
 use App\Models\Patient;
 use App\Services\CallService;
+use App\Services\CallSignalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,7 +40,7 @@ class CallController extends Controller
         return redirect()->route('calls.show', $call);
     }
 
-    public function show(Call $call): View
+    public function show(Call $call, CallSignalService $signals): View
     {
         $call->load(['patient', 'user', 'measurement']);
 
@@ -56,7 +57,9 @@ class CallController extends Controller
 
         $openAlarmCount = $call->patient->alarms()->open()->count();
 
-        return view('hospital.calls.show', compact('call', 'todayMeasurements', 'openAlarmCount'));
+        $iceServers = $signals->iceServers();
+
+        return view('hospital.calls.show', compact('call', 'todayMeasurements', 'openAlarmCount', 'iceServers'));
     }
 
     public function status(Call $call): JsonResponse

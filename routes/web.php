@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\PatientLoginController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\StaffLoginController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
+use App\Http\Controllers\CallSignalController;
 use App\Http\Controllers\Hospital\AccountController;
 use App\Http\Controllers\Hospital\AlarmController;
 use App\Http\Controllers\Hospital\AuditLogController;
@@ -126,6 +127,8 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
             Route::post('/anrufe/{call}/annehmen', [CallController::class, 'answer'])->name('calls.answer');
             Route::post('/anrufe/{call}/beenden', [CallController::class, 'end'])->name('calls.end');
             Route::put('/anrufe/{call}/notiz', [CallController::class, 'note'])->name('calls.note');
+            Route::get('/anrufe/{call}/signale', [CallSignalController::class, 'index'])->middleware('throttle:video')->name('calls.signals.index');
+            Route::post('/anrufe/{call}/signale', [CallSignalController::class, 'store'])->middleware('throttle:video')->name('calls.signals.store');
 
             Route::get('/konto', [AccountController::class, 'edit'])->name('account.edit');
             Route::put('/konto/passwort', [AccountController::class, 'updatePassword'])->middleware('throttle:6,1')->name('account.password');
@@ -174,4 +177,6 @@ Route::prefix('app')->name('patient.')->middleware(['auth', 'role:patient'])->gr
     Route::post('/anrufe/{call}/annehmen', [PatientCallController::class, 'answer'])->name('calls.answer');
     Route::post('/anrufe/{call}/ablehnen', [PatientCallController::class, 'decline'])->name('calls.decline');
     Route::post('/anrufe/{call}/beenden', [PatientCallController::class, 'end'])->name('calls.end');
+    Route::get('/anrufe/{call}/signale', [CallSignalController::class, 'index'])->middleware('throttle:video')->name('calls.signals.index');
+    Route::post('/anrufe/{call}/signale', [CallSignalController::class, 'store'])->middleware('throttle:video')->name('calls.signals.store');
 });

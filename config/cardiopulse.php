@@ -55,6 +55,19 @@ return [
     'emergency_number' => env('CARDIOPULSE_EMERGENCY_NUMBER', '144'),
 
     /*
+     | Videosprechstunde (WebRTC): Bild und Ton laufen direkt zwischen den Browsern.
+     | STUN hilft beim Finden der öffentlichen Adresse (Standard: Nextcloud, Deutschland –
+     | sieht nur die IP-Adresse, keine Inhalte). TURN leitet weiter, wenn keine direkte
+     | Verbindung möglich ist (z. B. Firmen-WLAN) – braucht einen eigenen Server, optional.
+     */
+    'video' => [
+        'stun' => env('CARDIOPULSE_STUN_URLS', 'stun:stun.nextcloud.com:443'),
+        'turn_url' => env('CARDIOPULSE_TURN_URL'),
+        'turn_username' => env('CARDIOPULSE_TURN_USERNAME'),
+        'turn_credential' => env('CARDIOPULSE_TURN_CREDENTIAL'),
+    ],
+
+    /*
      | Zwei-Faktor-Anmeldung für Ärzte: Bei true muss jeder Arzt sie nach der Anmeldung
      | einrichten, bevor er die App nutzen kann (empfohlen im Produktivbetrieb).
      */

@@ -7,13 +7,13 @@
     $kicker = match (true) {
         $call->status === CallStatus::Ringing && $incoming => 'EINGEHENDER ANRUF',
         $call->status === CallStatus::Ringing => 'VERBINDE …',
-        $call->status === CallStatus::Active => 'LAUFENDES GESPRÄCH · VERSCHLÜSSELT',
+        $call->status === CallStatus::Active => 'VIDEOSPRECHSTUNDE · VERSCHLÜSSELT',
         $call->status === CallStatus::Declined => 'NICHT ANGENOMMEN',
         default => 'GESPRÄCH BEENDET',
     };
 @endphp
 <x-layouts.patient title="Anruf" theme="navy" :poll="false">
-    <section class="p-call"
+    <section @class(['p-call', 'p-call--video' => $call->status === CallStatus::Active])
              data-call
              data-status-url="{{ route('patient.calls.status', $call) }}"
              data-status="{{ $call->status->value }}"
@@ -30,13 +30,14 @@
 
         @if ($call->status === CallStatus::Active)
             <div class="p-call__timer" data-call-timer>{{ \App\Support\Format::duration($call->durationSeconds()) }}</div>
+            <x-video-call :signal-url="route('patient.calls.signals.index', $call)" role="answerer" :ice-servers="$iceServers" :peer-name="$peer" />
+        @else
+            <div class="wave is-idle" data-wave aria-hidden="true">
+                @for ($i = 0; $i < 24; $i++)
+                    <span style="height:{{ 4 + (($i * 29) % 26) }}px"></span>
+                @endfor
+            </div>
         @endif
-
-        <div @class(['wave', 'is-idle' => $call->status !== CallStatus::Active]) data-wave aria-hidden="true">
-            @for ($i = 0; $i < 24; $i++)
-                <span style="height:{{ 4 + (($i * 29) % 26) }}px"></span>
-            @endfor
-        </div>
 
         <div class="p-actions">
             @if ($call->status === CallStatus::Ringing && $incoming)

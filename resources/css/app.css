@@ -1698,6 +1698,129 @@ a.user-chip[aria-current="page"] .user-chip__name {
     opacity: 0.35;
 }
 
+/* Videosprechstunde: Bild statt großer Uhr – kompaktere Kopfzeile, damit das Video Platz hat. */
+.call-stage--video {
+    padding: 32px;
+    gap: 14px;
+}
+
+.call-stage--video .call-stage__name {
+    font-size: 40px;
+}
+
+.call-stage--video .call-stage__info {
+    font-size: 16px;
+}
+
+.call-stage--video .call-stage__timer {
+    font-size: 32px;
+    margin-top: 0;
+}
+
+.call-stage--video .call-controls {
+    grid-template-columns: minmax(0, 320px);
+}
+
+.video-call {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.video-call__stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 56vh;
+    background: #000;
+    overflow: hidden;
+}
+
+.video-call__remote {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+}
+
+/* Eigenes Bild klein und gespiegelt – wie man es vom Spiegel gewohnt ist. */
+.video-call__local {
+    display: none;
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    width: 22%;
+    min-width: 96px;
+    max-width: 220px;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: #111;
+    border: 2px solid var(--ground);
+    transform: scaleX(-1);
+}
+
+.video-call.has-local-video .video-call__local {
+    display: block;
+}
+
+.video-call__unmute {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.video-call__state {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--sand);
+}
+
+.video-call__state[data-kind="ok"] {
+    color: #7fd8ea;
+}
+
+.video-call__state[data-kind="warn"] {
+    color: var(--yellow);
+}
+
+.video-call__state[data-kind="error"] {
+    color: #ffb4a9;
+}
+
+.video-call__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.video-call__controls .btn {
+    min-height: 52px;
+    font-size: 15px;
+}
+
+.p-call--video {
+    padding-top: 20px;
+}
+
+.p-call--video .p-call__kicker {
+    margin-top: 8px;
+}
+
+.p-call--video .p-call__name {
+    font-size: 30px;
+}
+
+.p-call--video .p-call__timer {
+    font-size: 28px;
+}
+
+.p-call--video .video-call__stage {
+    aspect-ratio: 4 / 3;
+}
+
 .call-controls {
     margin-top: auto;
     display: grid;

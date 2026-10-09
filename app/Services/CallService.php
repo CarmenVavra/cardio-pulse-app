@@ -10,10 +10,13 @@ use App\Models\Patient;
 use App\Models\User;
 
 /**
- * Anruf-Lebenszyklus Arzt ↔ Patient (Signalisierung; Sprachkanal via VoIP/WebRTC).
+ * Anruf-Lebenszyklus Arzt ↔ Patient. Bild und Ton der Videosprechstunde laufen per WebRTC
+ * direkt zwischen den Browsern ({@see CallSignalService} für den Verbindungsaufbau).
  */
 class CallService
 {
+    public function __construct(private readonly CallSignalService $signals) {}
+
     /**
      * Arzt ruft Patient an (D2/D4 "Anrufen", D3 "Patient anrufen").
      */
@@ -78,6 +81,7 @@ class CallService
         }
 
         $call->update(['status' => CallStatus::Declined, 'ended_at' => now()]);
+        $this->signals->purge($call);
 
         AuditLog::record('call.declined', $call);
 
@@ -94,6 +98,7 @@ class CallService
             'status' => $call->status === CallStatus::Ringing ? CallStatus::Declined : CallStatus::Ended,
             'ended_at' => now(),
         ]);
+        $this->signals->purge($call);
 
         AuditLog::record('call.ended', $call, ['duration_seconds' => $call->durationSeconds()]);
 

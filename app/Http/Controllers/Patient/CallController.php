@@ -7,6 +7,7 @@ use App\Enums\CallStatus;
 use App\Http\Requests\StartPatientCallRequest;
 use App\Models\Call;
 use App\Services\CallService;
+use App\Services\CallSignalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,13 +43,14 @@ class CallController extends PatientAreaController
         ]);
     }
 
-    public function show(Call $call): View
+    public function show(Call $call, CallSignalService $signals): View
     {
         Gate::authorize('participate', $call);
 
         $call->load(['user', 'measurement', 'patient']);
+        $iceServers = $signals->iceServers();
 
-        return view('patient.call', compact('call'));
+        return view('patient.call', compact('call', 'iceServers'));
     }
 
     public function status(Call $call): JsonResponse
