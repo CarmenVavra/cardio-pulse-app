@@ -32,7 +32,9 @@ class PatientMeasurementTest extends TestCase
             ->assertOk()
             ->assertSee('OBERER')
             ->assertSee('Beschwerden?')
-            ->assertSee('Foto-Scan');
+            ->assertSee('name="method" value="manual"', false)
+            ->assertDontSee('Foto-Scan')
+            ->assertDontSee('Bluetooth');
     }
 
     public function test_amber_measurement_shows_result_screen(): void

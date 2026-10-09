@@ -2297,46 +2297,6 @@ a.user-chip[aria-current="page"] .user-chip__name {
 
 /* Erfassen (M2) */
 
-.segmented {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    border: var(--rule);
-    margin: 0;
-    padding: 0;
-}
-
-.segmented label {
-    position: relative;
-    padding: 10px 12px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-}
-
-.segmented label + label {
-    border-left: var(--rule);
-}
-
-.segmented input {
-    position: absolute;
-    opacity: 0;
-    inset: 0;
-    cursor: pointer;
-}
-
-.segmented label:has(input:checked) {
-    background: var(--navy);
-    color: var(--ground);
-}
-
-.segmented label:has(input:focus-visible) {
-    outline: 2px solid var(--cyan);
-    outline-offset: 2px;
-}
-
 .value-fields {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -2448,17 +2408,6 @@ a.user-chip[aria-current="page"] .user-chip__name {
 .chip:has(input:focus-visible) {
     outline: 2px solid var(--cyan);
     outline-offset: 2px;
-}
-
-.method-hint {
-    background: var(--surface);
-    padding: 14px 16px;
-    font-size: 14px;
-    border-left: 6px solid var(--cyan);
-}
-
-.method-hint[hidden] {
-    display: none;
 }
 
 .section-title {

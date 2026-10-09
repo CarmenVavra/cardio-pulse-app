@@ -79,17 +79,6 @@ if (measureForm) {
         });
     });
 
-    // Erfassungsart: Hinweis für Bluetooth / Foto-Scan
-    const hints = [...measureForm.querySelectorAll('[data-method-hint]')];
-    const syncHints = () => {
-        const method = measureForm.querySelector('[data-method]:checked')?.value;
-        hints.forEach((hint) => {
-            hint.hidden = hint.dataset.methodHint !== method;
-        });
-    };
-    measureForm.querySelectorAll('[data-method]').forEach((radio) => radio.addEventListener('change', syncHints));
-    syncHints();
-
     // Beschwerden: "Keine" schließt andere Symptome aus
     const none = measureForm.querySelector('[data-symptom-none]');
     const symptoms = [...measureForm.querySelectorAll('[data-symptom]')];

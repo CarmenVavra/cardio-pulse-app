@@ -19,9 +19,8 @@ class MeasurementController extends PatientAreaController
     public function create(): View
     {
         $symptoms = config('cardiopulse.symptoms');
-        $methods = config('cardiopulse.methods');
 
-        return view('patient.measure', compact('symptoms', 'methods'));
+        return view('patient.measure', compact('symptoms'));
     }
 
     public function store(StoreMeasurementRequest $request, MeasurementRecorder $recorder): RedirectResponse

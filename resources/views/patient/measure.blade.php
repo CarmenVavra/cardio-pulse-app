@@ -19,21 +19,8 @@
             </div>
         @endif
 
-        <fieldset class="segmented">
-            <legend class="sr-only">Erfassungsart</legend>
-            @foreach ($methods as $key => $label)
-                <label><input type="radio" name="method" value="{{ $key }}" @checked(old('method', 'manual') === $key) data-method>{{ $label }}</label>
-            @endforeach
-        </fieldset>
-
-        <div class="method-hint" data-method-hint="bluetooth" hidden>
-            <b>Bluetooth-Messgerät</b><br>
-            Die Kopplung mit dem Messgerät erfolgt in der installierten iOS-/Android-App. Bitte übertragen Sie die Werte hier per Eintippen.
-        </div>
-        <div class="method-hint" data-method-hint="photo" hidden>
-            <b>Foto-Scan</b><br>
-            Die Display-Erkennung (OCR) steht in der installierten App zur Verfügung. Bitte prüfen Sie die Werte und tippen Sie sie hier ein.
-        </div>
+        {{-- Bluetooth-Import und Foto-Scan sind noch offen (README) – bis dahin nur Eintippen. --}}
+        <input type="hidden" name="method" value="manual">
 
         <div class="value-fields">
             <label class="value-field is-active" data-value-field>

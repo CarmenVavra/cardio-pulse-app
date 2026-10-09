@@ -135,10 +135,13 @@ Validierungsmeldungen und E-Mails sind deutsch (`lang/de/validation.php`, `lang/
 
 ## Offen bis zum Einsatz im Krankenhaus
 
-Diese zwei Punkte werden erst umgesetzt, wenn das Programm tatsächlich eingesetzt wird:
+Diese Punkte werden erst umgesetzt, wenn das Programm tatsächlich eingesetzt wird:
 
 1. **TURN-Server für die Videosprechstunde** – leitet Bild und Ton weiter, wenn keine direkte Verbindung möglich ist (strenge Krankenhaus- oder Firmen-Firewalls, manche Mobilfunknetze; ohne TURN klappt es in etwa 80–90 % der Fälle). Läuft nicht auf dem Webhosting, braucht einen eigenen kleinen Server (z. B. netcup-VPS, ca. 3–5 € im Monat, Standort Deutschland/Österreich) mit coturn und Zertifikat. In der App dann zeitlich begrenzte Zugangsdaten (coturn `use-auth-secret`) statt eines festen Passworts; die Einstellungen `CARDIOPULSE_TURN_*` sind schon vorhanden.
 2. **FHIR-Schnittstelle** – heute gibt es nur den FHIR-Export als Download. Für die Anbindung an das KIS: Lese-Schnittstelle (REST) für Patient, Blutdruck-Observations und Appointments mit Suche, Zugangsschlüssel pro angebundenem System (vom Admin verwaltet, jeder Zugriff protokolliert), Selbstbeschreibung unter `/fhir/metadata` und Prüfung gegen den FHIR-Standard. Die Details (wer holt bei wem ab, Patientennummern, Anmeldung z. B. SMART on FHIR / OAuth 2.0) richten sich nach dem System des Krankenhauses.
+3. **Messwerte vom Blutdruckgerät übernehmen** – die Auswahl „Bluetooth“ / „Foto-Scan“ ist bis dahin ausgeblendet, Patienten tippen die Werte ein. Umsetzung erst, wenn ein Messgerät zum Testen da ist:
+   - **Foto-Scan:** Texterkennung direkt am Handy (Tesseract.js mit Modell für LCD-Segmentziffern, Dateien vom eigenen Server, erst bei Bedarf geladen) – das Foto verlässt das Handy nicht. Die erkannten Werte werden nur vorausgefüllt, der Patient prüft und speichert selbst; Zuordnung nach Position (oben SYS, dann DIA, unten Puls) mit Plausibilitätsprüfung, unsichere Felder bleiben leer. Keine Cloud-Texterkennung (Gesundheitsdaten an Dritte).
+   - **Bluetooth:** Web Bluetooth mit dem Standard-Blutdruckprofil (GATT Blood Pressure Service) – fehlerfrei, aber nur Chrome auf Android, nicht iPhone, und nicht jedes Gerät nutzt den Standard.
 
 ## Bewusste Vereinfachungen / offene Punkte
 
@@ -149,7 +152,7 @@ Diese zwei Punkte werden erst umgesetzt, wenn das Programm tatsächlich eingeset
 - **Notfalltaste:** In der Web-App wird der Standort nur ermittelt, solange die App offen ist (Browser-Ortung mit Freigabe am Handy) – kein Hintergrund-Tracking, das ginge nur mit einer nativen App. Ebenso kann nur eine native App den Notruf ohne Tippen wählen.
 - Die **Privacy-Lock-PIN** lässt sich nicht per E-Mail zurücksetzen – ein Admin setzt sie unter „Ärzte“ neu.
 - Der Chat ist **kein Notfallkanal** – die App weist auf den Notruf hin (Standard **144**, Rettung Österreich; in Deutschland `CARDIOPULSE_EMERGENCY_NUMBER=112`).
-- Bluetooth-Import und Foto-Scan (OCR) sind nur in nativen Apps sinnvoll – in der Web-App erscheint ein Hinweis.
+- Messwerte werden eingetippt; Bluetooth-Import und Foto-Scan siehe „Offen bis zum Einsatz im Krankenhaus“.
 - Hypotonie wird **blau** dargestellt („Blue Ice“ laut Konzept, für WCAG-AA-Kontrast mit weißer Schrift leicht abgedunkelt: `#0277BD` statt `#0288D1`). Das Mockup sah weiß vor – das war zu unauffällig.
 - Die Grenzwerte folgen den ESC/ESH-Leitlinien (siehe oben). Rot beginnt bei Hypertonie Grad 3 (≥ 180 / ≥ 110) – das Konzept sah ≥ 180 / ≥ 120 vor; bestehende Messungen mit diastolisch 110–119 wurden umgefärbt (ohne nachträgliche Alarme).
 - Mikro-Labels sind 12 px statt 11 px (Mindestschriftgröße laut CLAUDE.md).
