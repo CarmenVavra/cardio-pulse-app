@@ -16,6 +16,9 @@
 <body class="p-body" @if ($poll) data-incoming-url="{{ route('patient.calls.active') }}" data-poll="4000" @endif>
 <a class="skip-link" href="#main">Zum Inhalt springen</a>
 <div @class(['p-app', 'p-app--'.$theme => $theme])>
+    @if ($tab)
+        <a class="sos-link" href="{{ route('patient.sos') }}"><x-icon name="siren" size="20" stroke="2.4" />Notfall · SOS</a>
+    @endif
     {{ $header ?? '' }}
 
     <main id="main" class="p-main" tabindex="-1">

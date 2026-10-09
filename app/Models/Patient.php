@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * unterliegt der Aufbewahrungspflicht (§ 630f BGB, 10 Jahre).
  *
  * @property Carbon $birth_date
+ * @property Carbon|null $location_consent_at
  * @property Carbon|null $deleted_at
  */
 class Patient extends Model
@@ -39,6 +40,7 @@ class Patient extends Model
         'phone',
         'diagnosis',
         'gp_name',
+        'location_consent_at',
     ];
 
     /**
@@ -48,6 +50,7 @@ class Patient extends Model
     {
         return [
             'birth_date' => 'date',
+            'location_consent_at' => 'datetime',
         ];
     }
 

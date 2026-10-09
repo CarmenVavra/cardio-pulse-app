@@ -21,6 +21,7 @@ final class BoardRow
         public readonly ?string $sparkline,
         public readonly bool $hasOpenAlarm,
         public readonly int $unreadMessages = 0,
+        public readonly bool $hasOpenSos = false,
     ) {}
 
     /**
@@ -33,7 +34,8 @@ final class BoardRow
 
     public function sortKey(): string
     {
-        $order = $this->status?->sortOrder() ?? 9;
+        // Offene Notfalltaste immer ganz oben, unabhängig vom letzten Messwert.
+        $order = $this->hasOpenSos ? 'a' : 'b'.($this->status?->sortOrder() ?? 9);
 
         return $order.'-'.str_pad((string) (PHP_INT_MAX - ($this->uploadedAt?->getTimestamp() ?? 0)), 20, '0', STR_PAD_LEFT);
     }

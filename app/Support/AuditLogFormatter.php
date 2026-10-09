@@ -66,6 +66,13 @@ class AuditLogFormatter
         'measurement.uploaded' => 'Messung übertragen',
         'measurement.symptom_free_confirmed' => 'Beschwerdefreiheit bestätigt',
         'alarm.acknowledged' => 'Alarm quittiert',
+        'alarm.claimed' => 'Alarm übernommen',
+        'alarm.sos_triggered' => 'Notfalltaste gedrückt',
+        'alarm.sos_repeated' => 'Notfalltaste erneut gedrückt',
+        'alarm.location_received' => 'Standort im Notfall übermittelt',
+        'alarm.false_alarm' => 'Patient meldet Fehlalarm',
+        'patient.location_consent_given' => 'Standort im Notfall freigegeben',
+        'patient.location_consent_withdrawn' => 'Standortfreigabe widerrufen',
         'call.started' => 'Anruf gestartet',
         'call.answered' => 'Anruf angenommen',
         'call.declined' => 'Anruf abgelehnt',
@@ -126,6 +133,10 @@ class AuditLogFormatter
         'starts_at' => 'Termin',
         'minutes' => 'Dauer (Min)',
         'by_patient' => 'Vom Patienten',
+        'type' => 'Art',
+        'location' => 'Standort übermittelt',
+        'location_deleted' => 'Standort gelöscht',
+        'seconds_open' => 'Offen (s)',
     ];
 
     /**
@@ -135,6 +146,7 @@ class AuditLogFormatter
         'app' => ['patient' => 'Patienten-App'],
         'via' => ['console' => 'Kommandozeile (Server)'],
         'direction' => ['to_patient' => 'Arzt → Patient', 'to_clinic' => 'Patient → Klinik'],
+        'type' => ['sos' => 'Notfalltaste', 'measurement' => 'Hoher Messwert'],
         'status' => [
             'red' => 'Rot',
             'amber' => 'Gelb-Orange',
@@ -208,7 +220,7 @@ class AuditLogFormatter
             $subject instanceof Patient => $this->patient($subject),
             $subject instanceof User => $subject->isStaff() ? $subject->displayName() : $subject->name,
             $subject instanceof Measurement => 'Messung '.$subject->reading().' · '.$this->patient($subject->patient),
-            $subject instanceof Alarm => 'Alarm · '.$this->patient($subject->patient),
+            $subject instanceof Alarm => ($subject->isSos() ? 'Notfall (SOS)' : 'Alarm').' · '.$this->patient($subject->patient),
             $subject instanceof Call => 'Anruf · '.$this->patient($subject->patient),
             $subject instanceof Appointment => 'Termin '.$subject->starts_at->format('d.m.Y H:i').' · '.$this->patient($subject->patient),
             $subject instanceof Message => 'Nachricht · '.$this->patient($subject->patient),

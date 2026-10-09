@@ -157,6 +157,6 @@ class VideoCallTest extends TestCase
 
     public function test_camera_and_microphone_are_allowed_for_the_app_only(): void
     {
-        $this->get(route('login'))->assertHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(), payment=(), usb=(), interest-cohort=()');
+        $this->get(route('login'))->assertHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(self), payment=(), usb=(), interest-cohort=()');
     }
 }

@@ -94,10 +94,13 @@ if (body.dataset.sound === '1') {
 }
 
 let openAlarms = 0;
+let unclaimedAlarms = 0;
 let lastAlarmId = null;
+let newestAlarmId = null;
 
 function updateTone() {
-    const shouldPlay = openAlarms > 0 && tone.enabled && !tone.muted && page !== 'call';
+    // Ton nur, solange sich bei mindestens einem Alarm noch niemand kümmert.
+    const shouldPlay = unclaimedAlarms > 0 && tone.enabled && !tone.muted && page !== 'call';
     if (shouldPlay) {
         tone.start();
     } else {
@@ -188,8 +191,27 @@ function updateModal(data) {
     }
     if (String(data.alarm_id) !== currentModalId()) {
         layer.innerHTML = data.modal_html;
-        minimizedAlarmId = null;
-        showModal();
+        if (data.alarm_passive) {
+            // Von einem Kollegen übernommen: nicht aufpoppen, nur im Banner zeigen.
+            minimizedAlarmId = String(data.alarm_id);
+            hideModal();
+        } else {
+            minimizedAlarmId = null;
+            showModal();
+        }
+    } else if (data.alarm_version !== layer.querySelector('[data-alarm-version]')?.dataset.alarmVersion) {
+        // Gleicher Alarm, neuer Stand (übernommen, Standort, Fehlalarm): Inhalt tauschen,
+        // getippte Maßnahme und Fokus behalten.
+        const note = layer.querySelector('textarea')?.value ?? '';
+        const noteFocused = document.activeElement?.matches?.('.alarm-modal textarea') ?? false;
+        layer.innerHTML = data.modal_html;
+        const textarea = layer.querySelector('textarea');
+        if (textarea) {
+            textarea.value = note;
+            if (noteFocused && !layer.hidden) {
+                textarea.focus({ preventScroll: true });
+            }
+        }
     } else if (String(minimizedAlarmId) !== String(data.alarm_id) && layer.hidden) {
         showModal();
     }
@@ -240,6 +262,19 @@ document.addEventListener('submit', async (event) => {
         }
     }
 
+    if (form.matches('[data-claim-form]')) {
+        event.preventDefault();
+        if (event.submitter) {
+            event.submitter.disabled = true;
+        }
+        try {
+            await postForm(form.action, new FormData(form));
+            await refresh();
+        } catch {
+            form.submit();
+        }
+    }
+
     if (form.matches('[data-demo-form]')) {
         event.preventDefault();
         try {
@@ -254,6 +289,9 @@ document.addEventListener('submit', async (event) => {
 if (layer && !layer.hidden) {
     lastAlarmId = currentModalId();
     showModal();
+} else if (currentModalId()) {
+    // Von einem Kollegen übernommener Alarm: bleibt zu, bis jemand „Alarm öffnen“ wählt.
+    minimizedAlarmId = currentModalId();
 }
 
 /* ------------------------------------------------------------------ Live-Board (D2) */
@@ -352,9 +390,11 @@ function apply(data) {
     }
 
     openAlarms = data.open_alarms;
-    if (data.alarm_id && data.alarm_id !== lastAlarmId) {
+    unclaimedAlarms = data.unclaimed_alarms ?? data.open_alarms;
+    if (data.newest_alarm_id && data.newest_alarm_id !== newestAlarmId) {
         tone.muted = false; // Neuer Alarm: Ton immer wieder einschalten.
     }
+    newestAlarmId = data.newest_alarm_id;
     lastAlarmId = data.alarm_id;
 
     const badge = document.querySelector('[data-alarm-badge]');

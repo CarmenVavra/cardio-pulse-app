@@ -6,6 +6,7 @@ use App\Enums\CallDirection;
 use App\Enums\CallStatus;
 use App\Models\Alarm;
 use App\Models\Call;
+use App\Models\User;
 use App\Support\BoardRow;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -38,9 +39,9 @@ class BoardSnapshot
     /**
      * @return array{openAlarms: EloquentCollection<int, Alarm>, acknowledged: Alarm|null}
      */
-    public function alarms(): array
+    public function alarms(?User $viewer = null): array
     {
-        $open = $this->alarms->open();
+        $open = $this->alarms->open($viewer);
 
         return [
             'openAlarms' => $open,

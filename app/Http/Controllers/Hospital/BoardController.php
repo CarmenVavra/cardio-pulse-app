@@ -16,7 +16,7 @@ class BoardController extends Controller
     public function index(Request $request, BoardSnapshot $snapshot): View
     {
         ['rows' => $rows, 'counts' => $counts, 'uploadsToday' => $uploadsToday, 'patientsTotal' => $patientsTotal] = $snapshot->board();
-        ['openAlarms' => $openAlarms, 'acknowledged' => $acknowledged] = $snapshot->alarms();
+        ['openAlarms' => $openAlarms, 'acknowledged' => $acknowledged] = $snapshot->alarms($request->user());
         $locked = (bool) $request->session()->get('screen_locked', false);
         $demo = (bool) config('cardiopulse.demo');
 
@@ -29,14 +29,19 @@ class BoardController extends Controller
     public function live(Request $request, BoardSnapshot $snapshot): JsonResponse
     {
         $locked = (bool) $request->session()->get('screen_locked', false);
-        ['openAlarms' => $openAlarms, 'acknowledged' => $acknowledged] = $snapshot->alarms();
+        ['openAlarms' => $openAlarms, 'acknowledged' => $acknowledged] = $snapshot->alarms($request->user());
         $firstAlarm = $openAlarms->first();
         $incoming = $locked ? null : $snapshot->incomingCall();
 
         $payload = [
             'locked' => $locked,
             'open_alarms' => $openAlarms->count(),
+            // Signalton nur, solange sich noch niemand um einen Alarm kümmert.
+            'unclaimed_alarms' => $openAlarms->whereNull('claimed_by')->count(),
+            'newest_alarm_id' => $openAlarms->max('id'),
             'alarm_id' => $firstAlarm?->id,
+            'alarm_version' => $firstAlarm?->version(),
+            'alarm_passive' => $firstAlarm?->isClaimedByOther($request->user()) ?? false,
             'banner_html' => view('hospital.partials.alarm-banner', compact('openAlarms', 'acknowledged', 'locked'))->render(),
             'modal_html' => $firstAlarm && ! $locked
                 ? view('hospital.partials.alarm-modal', ['alarm' => $firstAlarm, 'more' => $openAlarms->count() - 1])->render()

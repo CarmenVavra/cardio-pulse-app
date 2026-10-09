@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\BloodPressureStatus;
+use App\Models\Alarm;
 use App\Models\Measurement;
 use App\Models\MonthlyReport;
 use App\Models\Patient;
@@ -83,6 +84,7 @@ class MonitoringBoard
             sparkline: Sparkline::path($patient->measurements),
             hasOpenAlarm: $patient->alarms->isNotEmpty(),
             unreadMessages: (int) $patient->getAttribute('unread_messages_count'),
+            hasOpenSos: $patient->alarms->contains(fn (Alarm $alarm) => $alarm->isSos()),
         );
     }
 }

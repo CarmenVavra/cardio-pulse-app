@@ -4,11 +4,17 @@
         $measurement = $row->measurement;
         $isRed = $row->status === \App\Enums\BloodPressureStatus::Red;
     @endphp
-    <tr class="board-row st-{{ $row->status?->value ?? 'none' }}"
+    <tr @class(['board-row', 'st-'.($row->status?->value ?? 'none'), 'board-row--sos' => $row->hasOpenSos])
         data-upload-key="{{ $row->uploadKey() }}"
         data-search="{{ $locked ? mb_strtolower($patient->patient_number) : mb_strtolower($patient->fullName().' '.$patient->patient_number) }}">
         <td class="stripe-cell"><span class="stripe"></span></td>
-        <td class="col-tag col-pad"><x-status-tag :status="$row->status" short /></td>
+        <td class="col-tag col-pad">
+            @if ($row->hasOpenSos)
+                <span class="tag tag--sos">Notfall</span>
+            @else
+                <x-status-tag :status="$row->status" short />
+            @endif
+        </td>
         <td class="col-name col-pad">
             <div class="board-row__name">
                 @if ($locked)

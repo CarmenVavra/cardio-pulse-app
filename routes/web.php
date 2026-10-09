@@ -26,6 +26,7 @@ use App\Http\Controllers\Patient\AccountController as PatientAccountController;
 use App\Http\Controllers\Patient\AppointmentController as PatientAppointmentController;
 use App\Http\Controllers\Patient\CallController as PatientCallController;
 use App\Http\Controllers\Patient\DoctorController;
+use App\Http\Controllers\Patient\EmergencyController;
 use App\Http\Controllers\Patient\HomeController;
 use App\Http\Controllers\Patient\MeasurementController;
 use App\Http\Controllers\Patient\MedicationController as PatientMedicationController;
@@ -87,6 +88,7 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
 
         Route::middleware('unlocked')->group(function () {
             Route::post('/alarme/{alarm}/quittieren', [AlarmController::class, 'acknowledge'])->name('alarms.acknowledge');
+            Route::post('/alarme/{alarm}/uebernehmen', [AlarmController::class, 'claim'])->name('alarms.claim');
 
             Route::get('/patienten', [PatientController::class, 'index'])->name('patients.index');
             Route::get('/patienten/neu', [PatientController::class, 'create'])->name('patients.create');
@@ -169,6 +171,13 @@ Route::prefix('app')->name('patient.')->middleware(['auth', 'role:patient'])->gr
 
     Route::get('/konto', [PatientAccountController::class, 'edit'])->name('account.edit');
     Route::put('/konto/passwort', [PatientAccountController::class, 'updatePassword'])->middleware('throttle:6,1')->name('account.password');
+    Route::put('/konto/standort', [PatientAccountController::class, 'updateLocationConsent'])->name('account.location');
+
+    Route::get('/notfall', [EmergencyController::class, 'show'])->name('sos');
+    Route::post('/notfall', [EmergencyController::class, 'store'])->middleware('throttle:20,1')->name('sos.store');
+    Route::get('/notfall/status', [EmergencyController::class, 'status'])->name('sos.status');
+    Route::post('/notfall/standort', [EmergencyController::class, 'location'])->middleware('throttle:30,1')->name('sos.location');
+    Route::post('/notfall/fehlalarm', [EmergencyController::class, 'falseAlarm'])->name('sos.false-alarm');
     Route::post('/nachrichten', [PatientMessageController::class, 'store'])->middleware('throttle:20,1')->name('messages.store');
 
     Route::get('/medikation', [PatientMedicationController::class, 'index'])->name('medications.index');

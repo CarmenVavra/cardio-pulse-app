@@ -82,7 +82,7 @@
         </div>
     @endif
 
-    <div class="alarm-layer" data-alarm-layer @if ($openAlarms->isEmpty() || $locked) hidden @endif>
+    <div class="alarm-layer" data-alarm-layer @if ($openAlarms->isEmpty() || $locked || $openAlarms->first()->isClaimedByOther(auth()->user())) hidden @endif>
         @if ($openAlarms->isNotEmpty() && ! $locked)
             @include('hospital.partials.alarm-modal', ['alarm' => $openAlarms->first(), 'more' => $openAlarms->count() - 1])
         @endif

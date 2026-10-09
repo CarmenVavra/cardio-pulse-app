@@ -18,6 +18,28 @@
             <div class="meta">{{ $patient->patient_number }} · Anmeldung mit {{ $patient->user->email }}</div>
         </section>
 
+        <form method="POST" action="{{ route('patient.account.location') }}" class="card card__pad stack" id="standort" aria-labelledby="location-title">
+            @csrf
+            @method('PUT')
+            <h2 id="location-title" style="font-size:20px">Standort im Notfall</h2>
+            <p class="meta">
+                Wenn Sie die <b>Notfalltaste</b> drücken, kann die App Ihren aktuellen Standort an das Krankenhaus schicken – wichtig, wenn Sie unterwegs sind.
+                Der Standort wird <b>nur in diesem Moment</b> ermittelt (keine laufende Ortung), verschlüsselt gespeichert und gelöscht, sobald das Krankenhaus den Notruf bearbeitet hat.
+                Sie können die Freigabe jederzeit widerrufen.
+            </p>
+            <p @class(['location-state', 'location-state--on' => $patient->location_consent_at])>
+                @if ($patient->location_consent_at)
+                    Freigegeben seit {{ $patient->location_consent_at->format('d.m.Y') }}
+                @else
+                    Nicht freigegeben
+                @endif
+            </p>
+            <input type="hidden" name="consent" value="{{ $patient->location_consent_at ? '0' : '1' }}">
+            <button type="submit" @class(['btn', 'btn--lg', 'btn--block', 'btn--primary' => ! $patient->location_consent_at, 'btn--outline' => $patient->location_consent_at])>
+                {{ $patient->location_consent_at ? 'Freigabe widerrufen' : 'Standort im Notfall mitschicken' }}
+            </button>
+        </form>
+
         <form method="POST" action="{{ route('patient.account.password') }}" class="card card__pad stack" novalidate>
             @csrf
             @method('PUT')
