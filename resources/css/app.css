@@ -48,6 +48,11 @@
     border-radius: 0;
 }
 
+/* Das hidden-Attribut gilt immer – auch für Elemente, deren Klasse ein display setzt (z. B. .btn). */
+[hidden] {
+    display: none !important;
+}
+
 html {
     -webkit-text-size-adjust: 100%;
 }
