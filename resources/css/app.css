@@ -219,6 +219,12 @@ table {
     color: #fff;
 }
 
+.tag--admin {
+    background: var(--navy);
+    color: var(--ground);
+    box-shadow: none;
+}
+
 .st-amber .tag--solid,
 .tag--solid.st-amber {
     color: var(--navy);
@@ -540,6 +546,15 @@ table {
 
 .checkbox input:checked::after {
     border-color: var(--ground);
+}
+
+.checkbox input:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.checkbox:has(input:disabled) {
+    cursor: not-allowed;
 }
 
 .alert {

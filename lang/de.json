@@ -1,0 +1,10 @@
+{
+    "Unauthorized": "Nicht angemeldet",
+    "Forbidden": "Kein Zugriff",
+    "This action is unauthorized.": "Dafür fehlt Ihnen die Berechtigung.",
+    "Not Found": "Seite nicht gefunden",
+    "Page Expired": "Sitzung abgelaufen – bitte Seite neu laden",
+    "Too Many Requests": "Zu viele Anfragen – bitte kurz warten",
+    "Server Error": "Serverfehler",
+    "Service Unavailable": "Wartungsarbeiten – bitte in wenigen Minuten erneut versuchen"
+}

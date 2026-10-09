@@ -9,9 +9,12 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
+    /**
+     * Dr. Miriam Weber – wie in den Demo-Daten Admin.
+     */
     protected function staff(): User
     {
-        return User::factory()->staff()->create(['username' => 'm.weber', 'name' => 'Miriam Weber']);
+        return User::factory()->admin()->create(['username' => 'm.weber', 'name' => 'Miriam Weber']);
     }
 
     protected function patient(array $attributes = []): Patient

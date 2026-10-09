@@ -19,7 +19,7 @@ class DeleteDoctorRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return (bool) $this->user()?->isStaff();
+        return (bool) $this->user()?->can('manage-doctors');
     }
 
     /**

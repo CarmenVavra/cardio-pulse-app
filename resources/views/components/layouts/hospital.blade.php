@@ -6,8 +6,10 @@
         'patients' => ['Patienten', route('patients.index')],
         'reports' => ['Monatsberichte', route('reports.index')],
         'calls' => ['Anrufe', route('calls.index')],
-        'doctors' => ['Ärzte', route('doctors.index')],
     ];
+    if ($user?->can('manage-doctors')) {
+        $tabs['doctors'] = ['Ärzte', route('doctors.index')];
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="de">

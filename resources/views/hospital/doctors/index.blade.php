@@ -32,6 +32,9 @@
                                     @if ($doctor->is(auth()->user()))
                                         <span class="meta">(Sie)</span>
                                     @endif
+                                    @if ($doctor->is_admin)
+                                        <span class="tag tag--admin" title="Darf Ärzte verwalten">Admin</span>
+                                    @endif
                                 </span>
                             </td>
                             <td>{{ $doctor->username }}</td>

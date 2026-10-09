@@ -9,7 +9,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 /**
- * Arzt anlegen/bearbeiten (nur Krankenhaus-Personal).
+ * Arzt anlegen/bearbeiten (nur Admins).
  */
 class DoctorRequest extends FormRequest
 {
@@ -18,7 +18,7 @@ class DoctorRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return (bool) $this->user()?->isStaff();
+        return (bool) $this->user()?->can('manage-doctors');
     }
 
     /**
@@ -41,6 +41,7 @@ class DoctorRequest extends FormRequest
             'available_until' => ['nullable', 'date_format:H:i'],
             'password' => [$creating ? 'required' : 'nullable', 'confirmed', Password::defaults()],
             'pin' => [$creating ? 'required' : 'nullable', 'digits:6'],
+            'is_admin' => ['boolean'],
         ];
     }
 
@@ -90,6 +91,21 @@ class DoctorRequest extends FormRequest
             'phone' => $this->validated('phone'),
             'available_until' => $this->validated('available_until'),
         ];
+    }
+
+    /**
+     * Admin-Rechte. Die eigenen bleiben immer erhalten – so gibt es stets mindestens
+     * einen Admin; entziehen kann sie nur ein anderer Admin.
+     */
+    public function isAdmin(): bool
+    {
+        $doctor = $this->route('doctor');
+
+        if ($doctor instanceof User && $doctor->is($this->user())) {
+            return true;
+        }
+
+        return $this->boolean('is_admin');
     }
 
     protected function prepareForValidation(): void

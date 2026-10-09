@@ -71,6 +71,7 @@ class DatabaseSeeder extends Seeder
         $doctor = User::create([
             'role' => UserRole::Staff,
             'username' => 'm.weber',
+            'is_admin' => true,
             'title' => 'Dr.',
             'name' => 'Miriam Weber',
             'email' => 'm.weber@klinikum-nord.test',

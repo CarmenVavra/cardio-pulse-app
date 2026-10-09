@@ -77,6 +77,19 @@
                 </div>
             </fieldset>
 
+            <fieldset class="form-section">
+                <legend>Berechtigung</legend>
+                <input type="hidden" name="is_admin" value="0">
+                <label class="checkbox">
+                    <input type="checkbox" name="is_admin" value="1" aria-describedby="is-admin-hint"
+                           @checked(old('is_admin', $doctor->is_admin)) @disabled($isSelf)>
+                    Admin – darf Ärzte anlegen, bearbeiten und löschen
+                </label>
+                <p class="meta" id="is-admin-hint">
+                    {{ $isSelf ? 'Ihre eigenen Admin-Rechte kann nur ein anderer Admin entziehen.' : 'Ärzte ohne Admin-Rechte sehen den Menüpunkt „Ärzte“ nicht.' }}
+                </p>
+            </fieldset>
+
             <div class="form-actions">
                 <button type="submit" class="btn btn--primary btn--lg">{{ $editing ? 'Änderungen speichern' : 'Arzt anlegen' }} <span aria-hidden="true">→</span></button>
                 <a class="btn btn--outline btn--lg" href="{{ route('doctors.index') }}">Abbrechen</a>

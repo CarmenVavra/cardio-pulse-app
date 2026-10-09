@@ -19,16 +19,18 @@ class DoctorService
     /**
      * @param  array{title: ?string, name: string, username: string, email: string, phone: ?string, available_until: ?string}  $data
      */
-    public function create(array $data, string $password, string $pin, ?User $by = null): User
+    public function create(array $data, string $password, string $pin, ?User $by = null, bool $isAdmin = false): User
     {
-        $doctor = User::create([
+        $doctor = new User([
             ...$data,
             'role' => UserRole::Staff,
             'password' => $password,
             'pin' => $pin,
         ]);
+        $doctor->is_admin = $isAdmin;
+        $doctor->save();
 
-        AuditLog::record('doctor.created', $doctor, ['username' => $doctor->username], $by);
+        AuditLog::record('doctor.created', $doctor, ['username' => $doctor->username, 'is_admin' => $isAdmin], $by);
 
         return $doctor;
     }
@@ -36,9 +38,10 @@ class DoctorService
     /**
      * @param  array{title: ?string, name: string, username: string, email: string, phone: ?string, available_until: ?string}  $data
      */
-    public function update(User $doctor, array $data, ?string $password, ?string $pin, User $by): User
+    public function update(User $doctor, array $data, ?string $password, ?string $pin, User $by, bool $isAdmin): User
     {
         $doctor->fill($data);
+        $doctor->is_admin = $isAdmin;
 
         if ($password !== null && $password !== '') {
             $doctor->password = $password;

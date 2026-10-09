@@ -22,11 +22,12 @@ class CreateDoctorCommandTest extends TestCase
             ->expectsQuestion('Telefon (optional)', '')
             ->expectsQuestion('Passwort (mind. 8 Zeichen, Buchstaben und Ziffern)', 'sicher-2026')
             ->expectsQuestion('PIN für den Privacy-Lock (6 Ziffern)', '482915')
-            ->expectsOutput('Dr. Miriam Weber wurde angelegt. Anmeldung mit „m.weber“.')
+            ->expectsOutput('Dr. Miriam Weber wurde angelegt (Admin). Anmeldung mit „m.weber“.')
             ->assertSuccessful();
 
         $doctor = User::query()->where('username', 'm.weber')->sole();
         $this->assertSame(UserRole::Staff, $doctor->role);
+        $this->assertTrue($doctor->is_admin, 'Der erste Arzt wird Admin.');
         $this->assertTrue(Hash::check('482915', $doctor->pin));
         $this->assertDatabaseHas('audit_logs', ['action' => 'doctor.created', 'user_id' => null]);
     }

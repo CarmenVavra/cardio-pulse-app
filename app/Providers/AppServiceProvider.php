@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -42,6 +43,9 @@ class AppServiceProvider extends ServiceProvider
         if (is_string($proxies) && $proxies !== '') {
             TrustProxies::at($proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
         }
+
+        // Ärzteverwaltung nur für Admins.
+        Gate::define('manage-doctors', fn (User $user) => $user->isAdmin());
 
         // {doctor} in Routen löst nur aktive Ärzte (Personal) auf.
         Route::bind('doctor', fn (string $value) => User::query()

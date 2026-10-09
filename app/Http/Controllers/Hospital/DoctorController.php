@@ -42,6 +42,7 @@ class DoctorController extends Controller
             $request->validated('password'),
             $request->validated('pin'),
             $request->user(),
+            $request->isAdmin(),
         );
 
         return redirect()
@@ -69,6 +70,7 @@ class DoctorController extends Controller
             $request->validated('password'),
             $request->validated('pin'),
             $request->user(),
+            $request->isAdmin(),
         );
 
         return redirect()

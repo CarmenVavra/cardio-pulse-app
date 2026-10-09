@@ -50,6 +50,14 @@ class UserFactory extends Factory
     }
 
     /**
+     * Admin: darf Ärzte verwalten.
+     */
+    public function admin(): static
+    {
+        return $this->staff()->state(fn (array $attributes) => ['is_admin' => true]);
+    }
+
+    /**
      * Indicate that the model's email address should be unverified.
      */
     public function unverified(): static

@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\UserRole;
+use App\Models\User;
 use App\Services\DoctorService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
@@ -10,14 +12,15 @@ use Illuminate\Validation\Rules\Password;
 
 /**
  * Legt einen Arzt-Zugang auf der Kommandozeile an – z. B. den ersten Zugang
- * nach dem Deployment, wenn keine Demo-Daten eingespielt werden.
+ * nach dem Deployment, wenn keine Demo-Daten eingespielt werden. Gibt es noch
+ * keinen Admin, wird der neue Arzt Admin (sonst nur mit --admin).
  */
 class CreateDoctorCommand extends Command
 {
     /**
      * @var string
      */
-    protected $signature = 'cardiopulse:create-doctor';
+    protected $signature = 'cardiopulse:create-doctor {--admin : Admin-Rechte vergeben (darf Ärzte verwalten)}';
 
     /**
      * @var string
@@ -72,9 +75,11 @@ class CreateDoctorCommand extends Command
             ],
             $data['password'],
             $data['pin'],
+            null,
+            $this->option('admin') || ! User::query()->where('role', UserRole::Staff)->where('is_admin', true)->exists(),
         );
 
-        $this->info($doctor->displayName().' wurde angelegt. Anmeldung mit „'.$doctor->username.'“.');
+        $this->info($doctor->displayName().' wurde angelegt'.($doctor->is_admin ? ' (Admin)' : '').'. Anmeldung mit „'.$doctor->username.'“.');
 
         return self::SUCCESS;
     }

@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * Quittierungen, Anrufe und das Prüfprotokoll nachvollziehbar.
  *
  * @property UserRole $role
+ * @property bool $is_admin
  * @property Carbon|null $deleted_at
  */
 class User extends Authenticatable
@@ -64,6 +65,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'pin' => 'hashed',
             'role' => UserRole::class,
+            'is_admin' => 'boolean',
         ];
     }
 
@@ -93,6 +95,14 @@ class User extends Authenticatable
     public function isPatient(): bool
     {
         return $this->role === UserRole::Patient;
+    }
+
+    /**
+     * Admins verwalten die Ärzte (anlegen, bearbeiten, löschen, Admin-Rechte).
+     */
+    public function isAdmin(): bool
+    {
+        return $this->isStaff() && $this->is_admin;
     }
 
     public function displayName(): string
