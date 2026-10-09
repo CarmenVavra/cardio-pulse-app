@@ -5,12 +5,12 @@
             <p class="meta">{{ $user->displayName() }} · Benutzerkennung <b>{{ $user->username }}</b> · {{ $user->email }}</p>
         </div>
 
-        @if (session('recovery_codes'))
+        @if ($freshRecoveryCodes)
             <section class="recovery-box" aria-labelledby="recovery-heading">
                 <h2 id="recovery-heading">Ihre Wiederherstellungscodes</h2>
                 <p>Jetzt ausdrucken oder sicher notieren – sie werden <b>nur dieses eine Mal</b> angezeigt. Ohne Handy melden Sie sich mit einem dieser Codes an; jeder funktioniert einmal.</p>
                 <ol class="recovery-codes">
-                    @foreach (session('recovery_codes') as $code)
+                    @foreach ($freshRecoveryCodes as $code)
                         <li><code>{{ $code }}</code></li>
                     @endforeach
                 </ol>

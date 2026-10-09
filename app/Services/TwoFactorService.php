@@ -8,6 +8,9 @@ use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Google2FA;
 
@@ -21,9 +24,76 @@ class TwoFactorService
 
     public function __construct(private readonly Google2FA $google2fa) {}
 
-    public function generateSecret(): string
+    /** So lange gilt ein angezeigter QR-Code bzw. bleiben neue Wiederherstellungscodes abrufbar. */
+    public const SETUP_MINUTES = 15;
+
+    /**
+     * Schlüssel für die laufende Einrichtung – bis zum ersten richtigen Code noch nicht beim
+     * Benutzer gespeichert. Er liegt verschlüsselt im Cache statt in der Session: Die
+     * Live-Aktualisierung des Boards speichert die Session alle paar Sekunden und könnte
+     * einen dort abgelegten Schlüssel überschreiben – dann passte der gescannte QR-Code nicht mehr.
+     */
+    public function pendingSecret(User $user): string
     {
-        return $this->google2fa->generateSecretKey(32);
+        $secret = $this->readEncrypted($this->setupKey($user));
+        if (! is_string($secret)) {
+            $secret = $this->google2fa->generateSecretKey(32);
+        }
+
+        // Bei jedem Aufruf derselbe Schlüssel; die Gültigkeit beginnt neu.
+        Cache::put($this->setupKey($user), Crypt::encryptString((string) json_encode($secret)), now()->addMinutes(self::SETUP_MINUTES));
+
+        return $secret;
+    }
+
+    public function hasPendingSecret(User $user): bool
+    {
+        return is_string($this->readEncrypted($this->setupKey($user)));
+    }
+
+    /**
+     * Neue Wiederherstellungscodes einmalig abholen (aus demselben Grund im Cache statt als Flash-Meldung).
+     *
+     * @return list<string>|null
+     */
+    public function pullFreshRecoveryCodes(User $user): ?array
+    {
+        $codes = $this->readEncrypted($this->codesKey($user));
+        Cache::forget($this->codesKey($user));
+
+        return is_array($codes) ? array_values(array_map('strval', $codes)) : null;
+    }
+
+    /**
+     * @param  list<string>  $codes
+     */
+    private function rememberFreshRecoveryCodes(User $user, array $codes): void
+    {
+        Cache::put($this->codesKey($user), Crypt::encryptString((string) json_encode($codes)), now()->addMinutes(self::SETUP_MINUTES));
+    }
+
+    private function readEncrypted(string $key): mixed
+    {
+        $value = Cache::get($key);
+        if (! is_string($value)) {
+            return null;
+        }
+
+        try {
+            return json_decode(Crypt::decryptString($value), true);
+        } catch (DecryptException) {
+            return null;
+        }
+    }
+
+    private function setupKey(User $user): string
+    {
+        return 'two-factor:setup:'.$user->id;
+    }
+
+    private function codesKey(User $user): string
+    {
+        return 'two-factor:codes:'.$user->id;
     }
 
     /**
@@ -46,15 +116,19 @@ class TwoFactorService
     }
 
     /**
-     * Einrichtung abschließen, wenn der Code aus der App zum neuen Schlüssel passt.
-     *
-     * @return list<string>|null die neuen Wiederherstellungscodes oder null bei falschem Code
+     * Einrichtung abschließen, wenn der Code aus der App zum angezeigten Schlüssel passt.
+     * Die neuen Wiederherstellungscodes holt die Kontoseite mit {@see pullFreshRecoveryCodes()} ab.
      */
-    public function enable(User $user, string $secret, string $code): ?array
+    public function enable(User $user, string $code): bool
     {
+        $secret = $this->readEncrypted($this->setupKey($user));
+        if (! is_string($secret)) {
+            return false;
+        }
+
         $step = $this->google2fa->verifyKeyNewer($secret, (string) preg_replace('/\D/', '', $code), 0);
         if ($step === false) {
-            return null;
+            return false;
         }
 
         $codes = $this->generateRecoveryCodes();
@@ -65,9 +139,12 @@ class TwoFactorService
             'two_factor_last_used' => (int) $step,
         ])->save();
 
+        Cache::forget($this->setupKey($user));
+        $this->rememberFreshRecoveryCodes($user, $codes);
+
         AuditLog::record('account.two_factor_enabled', $user, [], $user);
 
-        return $codes;
+        return true;
     }
 
     /**
@@ -90,17 +167,13 @@ class TwoFactorService
         }
     }
 
-    /**
-     * @return list<string>
-     */
-    public function regenerateRecoveryCodes(User $user): array
+    public function regenerateRecoveryCodes(User $user): void
     {
         $codes = $this->generateRecoveryCodes();
         $user->forceFill(['two_factor_recovery_codes' => $codes])->save();
+        $this->rememberFreshRecoveryCodes($user, $codes);
 
         AuditLog::record('account.recovery_codes_regenerated', $user, [], $user);
-
-        return $codes;
     }
 
     /**

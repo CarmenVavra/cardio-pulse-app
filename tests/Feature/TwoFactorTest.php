@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Services\TwoFactorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use PragmaRX\Google2FA\Google2FA;
@@ -50,12 +51,15 @@ class TwoFactorTest extends TestCase
         $doctor = $this->staff();
         $this->actingAs($doctor)->get(route('account.edit'))->assertOk()->assertSee('Einrichten');
 
-        $this->get(route('account.two-factor.create'))
+        $page = $this->get(route('account.two-factor.create'))
             ->assertOk()
             ->assertSee('<svg', false)
             ->assertSee('QR-Code für die Authenticator-App');
-        $secret = session('two_factor.setup_secret');
-        $this->assertIsString($secret);
+        $secret = app(TwoFactorService::class)->pendingSecret($doctor);
+        $page->assertSee(app(TwoFactorService::class)->formatSecret($secret));
+
+        // Neu laden zeigt denselben Schlüssel – der gescannte QR-Code bleibt gültig.
+        $this->get(route('account.two-factor.create'))->assertSee(app(TwoFactorService::class)->formatSecret($secret));
 
         $this->post(route('account.two-factor.store'), ['code' => '000000', 'current_password' => 'password'])
             ->assertSessionHasErrors('code', null, 'twoFactor');
@@ -64,17 +68,54 @@ class TwoFactorTest extends TestCase
         $this->assertFalse($doctor->fresh()->hasTwoFactor());
 
         $this->post(route('account.two-factor.store'), ['code' => $this->code($secret), 'current_password' => 'password'])
-            ->assertRedirect(route('account.edit'))
-            ->assertSessionHas('recovery_codes', fn (array $codes) => count($codes) === 8);
+            ->assertRedirect(route('account.edit'));
 
         $doctor->refresh();
         $this->assertTrue($doctor->hasTwoFactor());
         $this->assertSame($secret, $doctor->two_factor_secret);
         $this->assertNotSame($secret, DB::table('users')->where('id', $doctor->id)->value('two_factor_secret'), 'Schlüssel ist verschlüsselt gespeichert.');
-        $this->assertNull(session('two_factor.setup_secret'));
+        $this->assertFalse(app(TwoFactorService::class)->hasPendingSecret($doctor));
         $this->assertDatabaseHas('audit_logs', ['action' => 'account.two_factor_enabled', 'user_id' => $doctor->id]);
 
-        $this->get(route('account.edit'))->assertSee('Ihre Wiederherstellungscodes')->assertSee('Eingerichtet');
+        // Die Codes erscheinen genau einmal.
+        $this->get(route('account.edit'))
+            ->assertSee('Ihre Wiederherstellungscodes')
+            ->assertSee($doctor->two_factor_recovery_codes[0])
+            ->assertSee('Eingerichtet');
+        $this->get(route('account.edit'))->assertDontSee('Ihre Wiederherstellungscodes');
+    }
+
+    /**
+     * Regression: Die Live-Aktualisierung speichert die Session ständig neu. Ein dort abgelegter
+     * Schlüssel ging verloren, die App erzeugte unbemerkt einen neuen und der gescannte Code passte nie.
+     */
+    public function test_setup_survives_an_overwritten_session(): void
+    {
+        $doctor = $this->staff();
+        $this->actingAs($doctor)->get(route('account.two-factor.create'))->assertOk();
+        $secret = app(TwoFactorService::class)->pendingSecret($doctor);
+
+        $this->flushSession();
+        $this->actingAs($doctor);
+
+        $this->post(route('account.two-factor.store'), ['code' => $this->code($secret), 'current_password' => 'password'])
+            ->assertRedirect(route('account.edit'))
+            ->assertSessionHasNoErrors('twoFactor');
+        $this->assertTrue($doctor->fresh()->hasTwoFactor());
+    }
+
+    public function test_expired_setup_asks_for_a_new_scan(): void
+    {
+        $doctor = $this->staff();
+        $this->actingAs($doctor)->get(route('account.two-factor.create'));
+        $secret = app(TwoFactorService::class)->pendingSecret($doctor);
+
+        $this->travel(TwoFactorService::SETUP_MINUTES + 1)->minutes();
+
+        $this->post(route('account.two-factor.store'), ['code' => $this->code($secret), 'current_password' => 'password'])
+            ->assertRedirect(route('account.two-factor.create'))
+            ->assertSessionHasErrors(['code' => 'Der QR-Code ist abgelaufen. Bitte löschen Sie den Eintrag in der App und scannen Sie den neuen QR-Code.'], null, 'twoFactor');
+        $this->assertFalse($doctor->fresh()->hasTwoFactor());
     }
 
     public function test_login_needs_the_code_after_the_password(): void
@@ -176,8 +217,8 @@ class TwoFactorTest extends TestCase
         $this->post(route('account.two-factor.recovery-codes'), ['two_factor_password' => 'falsch'])
             ->assertSessionHasErrors('two_factor_password', null, 'twoFactorManage');
         $this->post(route('account.two-factor.recovery-codes'), ['two_factor_password' => 'password'])
-            ->assertRedirect(route('account.edit'))
-            ->assertSessionHas('recovery_codes');
+            ->assertRedirect(route('account.edit'));
+        $this->get(route('account.edit'))->assertSee('Ihre Wiederherstellungscodes');
         $this->assertCount(8, $doctor->fresh()->two_factor_recovery_codes);
         $this->assertNotContains('aaaaa-bbbbb', $doctor->fresh()->two_factor_recovery_codes);
 

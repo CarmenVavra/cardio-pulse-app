@@ -18,7 +18,7 @@
             </li>
             <li>
                 <h2>QR-Code scannen</h2>
-                <p class="meta">In der App „Konto hinzufügen“ bzw. „+“ wählen und diesen Code scannen.</p>
+                <p class="meta">In der App „Konto hinzufügen“ bzw. „+“ wählen und diesen Code scannen. Er gilt {{ $minutes }} Minuten.</p>
                 {{-- SVG der QR-Bibliothek: enthält nur Pfade, keine Benutzereingaben. --}}
                 <div class="qr-box" role="img" aria-label="QR-Code für die Authenticator-App">{!! $qrCode !!}</div>
                 <p class="meta">Scannen nicht möglich? Diesen Schlüssel in der App eintippen (zeitbasiert):</p>

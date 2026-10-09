@@ -21,8 +21,9 @@ class AccountController extends Controller
         $user = $request->user();
         $recoveryCodesLeft = $twoFactor->remainingRecoveryCodes($user);
         $twoFactorRequired = (bool) config('cardiopulse.require_two_factor');
+        $freshRecoveryCodes = $twoFactor->pullFreshRecoveryCodes($user);
 
-        return view('hospital.account', compact('user', 'recoveryCodesLeft', 'twoFactorRequired'));
+        return view('hospital.account', compact('user', 'recoveryCodesLeft', 'twoFactorRequired', 'freshRecoveryCodes'));
     }
 
     public function updatePassword(UpdatePasswordRequest $request, AccountService $accounts): RedirectResponse
