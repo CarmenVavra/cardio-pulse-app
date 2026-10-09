@@ -7,14 +7,36 @@
         @endif
 
         <section aria-labelledby="appointments">
-            <h2 id="appointments" class="micro">Videosprechstunden · nächste 14 Tage</h2>
+            <h2 id="appointments" class="micro">Videosprechstunden · {{ \App\Http\Requests\AppointmentFilterRequest::DOCTORS[$appointmentFilters['doctor']] }} · {{ \App\Http\Requests\AppointmentFilterRequest::RANGES[$appointmentFilters['range']] }}</h2>
+            <form method="GET" action="{{ route('calls.index') }}" class="filter-form appointment-filter" aria-label="Videosprechstunden filtern">
+                <div class="field">
+                    <label class="field__label" for="appointment-doctor">Ärzte</label>
+                    <select class="select" id="appointment-doctor" name="doctor">
+                        @foreach (\App\Http\Requests\AppointmentFilterRequest::DOCTORS as $value => $label)
+                            <option value="{{ $value }}" @selected($appointmentFilters['doctor'] === (string) $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="field__label" for="appointment-range">Zeitraum</label>
+                    <select class="select" id="appointment-range" name="range">
+                        @foreach (\App\Http\Requests\AppointmentFilterRequest::RANGES as $value => $label)
+                            <option value="{{ $value }}" @selected($appointmentFilters['range'] === (string) $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-actions appointment-filter__actions">
+                    <button type="submit" class="btn btn--outline">Anzeigen</button>
+                    <span class="meta">{{ $appointments->count() }} {{ $appointments->count() === 1 ? 'Termin' : 'Termine' }}</span>
+                </div>
+            </form>
             <div class="table-wrap">
                 <table class="data-table">
                     <thead><tr><th>Termin</th><th>Patient</th><th class="hide-sm">Arzt</th><th class="hide-md">Anlass</th><th><span class="sr-only">Aktion</span></th></tr></thead>
                     <tbody>
                         @forelse ($appointments as $appointment)
                             <tr @class(['is-due' => $appointment->canStart()])>
-                                <td class="nowrap"><b>{{ \App\Support\Format::day($appointment->starts_at) }}</b><br><span class="meta">{{ $appointment->durationMinutes() }} Min</span></td>
+                                <td class="nowrap"><b>{{ \App\Support\Format::day($appointment->starts_at) }}</b><br><span class="meta">{{ $appointment->starts_at->locale('de')->translatedFormat('D') }} · {{ $appointment->durationMinutes() }} Min</span></td>
                                 <td><a href="{{ route('patients.show', $appointment->patient) }}#termine">{{ $appointment->patient->fullName() }}</a><br><span class="meta">{{ $appointment->patient->patient_number }}</span></td>
                                 <td class="hide-sm">
                                     {{ $appointment->doctor?->shortName() ?? '—' }}
@@ -33,7 +55,14 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="meta">Keine Videosprechstunden geplant. Termine vereinbaren Sie in der Patientenansicht.</td></tr>
+                            <tr><td colspan="5" class="meta">
+                                @if ($appointmentFilters['doctor'] === 'mine')
+                                    Sie haben in diesem Zeitraum keine Videosprechstunden.
+                                    <a href="{{ route('calls.index', ['doctor' => 'all', 'range' => $appointmentFilters['range']]) }}">Termine aller Ärzte anzeigen</a>
+                                @else
+                                    Keine Videosprechstunden geplant. Termine vereinbaren Sie in der Patientenansicht.
+                                @endif
+                            </td></tr>
                         @endforelse
                     </tbody>
                 </table>

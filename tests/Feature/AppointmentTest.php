@@ -128,6 +128,57 @@ class AppointmentTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'appointment.started']);
     }
 
+    public function test_calls_page_filters_appointments_by_doctor_and_range(): void
+    {
+        $doctor = $this->staff();
+        $colleague = User::factory()->staff()->create(['username' => 't.krause', 'name' => 'Tobias Krause']);
+        $mine = $this->patient(['first_name' => 'Anna', 'last_name' => 'Eigner']);
+        $mineLater = $this->patient(['first_name' => 'Berta', 'last_name' => 'Spaeter']);
+        $foreign = $this->patient(['first_name' => 'Carl', 'last_name' => 'Kollege']);
+        $this->appointment($mine, $doctor, '2026-10-14 10:30');
+        $this->appointment($mineLater, $doctor, '2026-12-01 09:00');
+        $this->appointment($foreign, $colleague, '2026-10-15 10:30');
+        $this->actingAs($doctor);
+
+        // Voreinstellung: nur eigene Termine der nächsten 14 Tage.
+        $this->get(route('calls.index'))
+            ->assertOk()
+            ->assertSee('Nur meine Termine · Nächste 14 Tage')
+            ->assertSee('Anna Eigner')
+            ->assertDontSee('Berta Spaeter')
+            ->assertDontSee('Carl Kollege')
+            ->assertSee('1 Termin');
+
+        $this->get(route('calls.index', ['doctor' => 'all']))
+            ->assertSee('Anna Eigner')
+            ->assertSee('Carl Kollege')
+            ->assertDontSee('Berta Spaeter');
+
+        $this->get(route('calls.index', ['range' => '90']))
+            ->assertSee('Anna Eigner')
+            ->assertSee('Berta Spaeter')
+            ->assertDontSee('Carl Kollege');
+
+        $this->get(route('calls.index', ['doctor' => 'all', 'range' => 'all']))
+            ->assertSee('Alle Ärzte · Alle geplanten')
+            ->assertSee('3 Termine');
+
+        // Ungültige Werte fallen auf die Voreinstellung zurück.
+        $this->get(route('calls.index', ['doctor' => 'x', 'range' => '5000']))
+            ->assertOk()
+            ->assertSee('Nur meine Termine · Nächste 14 Tage');
+
+        $this->actingAs($colleague)
+            ->get(route('calls.index'))
+            ->assertSee('Carl Kollege')
+            ->assertDontSee('Anna Eigner');
+
+        $this->actingAs(User::factory()->staff()->create(['username' => 'n.neu']))
+            ->get(route('calls.index'))
+            ->assertSee('Sie haben in diesem Zeitraum keine Videosprechstunden.')
+            ->assertSee('Termine aller Ärzte anzeigen');
+    }
+
     public function test_hospital_cancels_and_the_patient_is_informed(): void
     {
         $doctor = $this->staff();

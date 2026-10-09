@@ -104,15 +104,17 @@ class AppointmentService
     }
 
     /**
-     * Termine der nächsten Tage für die Übersicht „Anrufe & Termine“.
+     * Geplante Termine für die Übersicht unter „Anrufe“ – optional nur die eines Arztes
+     * und nur die der nächsten Tage (null = alle geplanten).
      *
      * @return Collection<int, Appointment>
      */
-    public function upcoming(int $days = 14): Collection
+    public function upcoming(?User $doctor = null, ?int $days = 14): Collection
     {
         return Appointment::query()
             ->upcoming()
-            ->where('starts_at', '<=', now()->addDays($days)->endOfDay())
+            ->when($doctor !== null, fn ($query) => $query->where('user_id', $doctor?->id))
+            ->when($days !== null, fn ($query) => $query->where('starts_at', '<=', now()->addDays((int) $days)->endOfDay()))
             ->whereHas('patient', fn ($query) => $query->withoutTrashed())
             ->with(['patient', 'doctor'])
             ->orderBy('starts_at')

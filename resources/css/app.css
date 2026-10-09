@@ -3924,6 +3924,18 @@ a.msg-badge:hover {
     grid-column: 1 / -1;
 }
 
+/* Filter der Videosprechstunden unter „Anrufe“ */
+
+.appointment-filter {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 240px));
+    margin: 10px 0 12px;
+}
+
+.appointment-filter__actions {
+    align-items: center;
+    min-height: 44px;
+}
+
 .audit-table td {
     vertical-align: top;
 }

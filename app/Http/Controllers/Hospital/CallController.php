@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hospital;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AppointmentFilterRequest;
 use App\Http\Requests\SaveCallNoteRequest;
 use App\Models\Call;
 use App\Models\Patient;
@@ -20,7 +21,7 @@ use Illuminate\View\View;
  */
 class CallController extends Controller
 {
-    public function index(AppointmentService $appointmentService): View
+    public function index(AppointmentFilterRequest $request, AppointmentService $appointmentService): View
     {
         $openCalls = Call::query()->open()->whereHas('patient')->with(['patient', 'user'])->latest()->get();
         $recentCalls = Call::query()
@@ -31,9 +32,10 @@ class CallController extends Controller
             ->limit(25)
             ->get();
 
-        $appointments = $appointmentService->upcoming();
+        $appointments = $appointmentService->upcoming($request->onlyMine() ? $request->user() : null, $request->days());
+        $appointmentFilters = $request->filters();
 
-        return view('hospital.calls.index', compact('openCalls', 'recentCalls', 'appointments'));
+        return view('hospital.calls.index', compact('openCalls', 'recentCalls', 'appointments', 'appointmentFilters'));
     }
 
     public function store(Request $request, Patient $patient, CallService $calls): RedirectResponse
