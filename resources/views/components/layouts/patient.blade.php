@@ -10,7 +10,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    @include('partials.head', ['title' => $title])
+    @include('partials.head', ['title' => $title, 'pwa' => true])
     @vite(['resources/css/app.css', 'resources/js/patient.js'])
 </head>
 <body class="p-body" @if ($poll) data-incoming-url="{{ route('patient.calls.active') }}" data-poll="4000" @endif>

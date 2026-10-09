@@ -2805,6 +2805,42 @@ a.user-chip[aria-current="page"] .user-chip__name {
     font-weight: 600;
 }
 
+/* Als App installieren */
+
+.install-app {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-left: 6px solid var(--yellow);
+}
+
+.install-app__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.install-app__head img {
+    flex: none;
+}
+
+.install-app__title {
+    font-size: 17px;
+}
+
+.install-app__steps {
+    margin: 0;
+    padding-left: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 15px;
+}
+
+.install-app__later {
+    align-self: flex-start;
+}
+
 .location-state {
     font-weight: 700;
     color: var(--muted);

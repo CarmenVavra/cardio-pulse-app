@@ -18,6 +18,8 @@
             <div class="meta">{{ $patient->patient_number }} · Anmeldung mit {{ $patient->user->email }}</div>
         </section>
 
+        <x-install-app />
+
         <form method="POST" action="{{ route('patient.account.location') }}" class="card card__pad stack" id="standort" aria-labelledby="location-title">
             @csrf
             @method('PUT')

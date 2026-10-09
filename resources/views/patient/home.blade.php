@@ -57,6 +57,8 @@
             <x-icon name="plus" size="22" stroke="2.6" />Blutdruck eintragen
         </a>
 
+        <x-install-app dismissible />
+
         <section class="card" aria-labelledby="today-title">
             <div class="list-head">
                 <h2 id="today-title" style="font-size:13px;font-weight:600;letter-spacing:0">Heute · {{ $today->count() }} {{ $today->count() === 1 ? 'Messung' : 'Messungen' }}</h2>

@@ -42,6 +42,9 @@ Route::redirect('/', '/login');
 |--------------------------------------------------------------------------
 */
 
+// Hinweisseite ohne Internet – der Service Worker der installierten App speichert sie vorab.
+Route::view('/app/offline', 'patient.offline')->name('patient.offline');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [StaffLoginController::class, 'create'])->name('login');
     Route::post('/login', [StaffLoginController::class, 'store'])->middleware('throttle:10,1');
