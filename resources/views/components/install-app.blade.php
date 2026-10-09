@@ -5,7 +5,7 @@
 --}}
 <section class="card card__pad install-app" aria-labelledby="install-title" data-install @if ($dismissible) data-install-dismissible @endif hidden>
     <div class="install-app__head">
-        <img src="{{ asset('icons/icon-192.png') }}" alt="" width="44" height="44">
+        <img src="{{ asset('app-icons/icon-192.png') }}" alt="" width="44" height="44">
         <div>
             <h2 id="install-title" class="install-app__title">CardioPulse als App</h2>
             <p class="meta">Mit eigenem Symbol am Startbildschirm, ohne Browser-Leiste – Sie bleiben angemeldet.</p>

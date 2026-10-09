@@ -11,7 +11,7 @@ class InstallableAppTest extends TestCase
 
     public function test_manifest_describes_the_patient_app(): void
     {
-        $manifest = json_decode((string) file_get_contents(public_path('manifest.webmanifest')), true, flags: JSON_THROW_ON_ERROR);
+        $manifest = json_decode((string) file_get_contents(public_path('manifest.json')), true, flags: JSON_THROW_ON_ERROR);
 
         $this->assertSame('CardioPulse', $manifest['name']);
         $this->assertSame('/app', $manifest['start_url']);
@@ -26,12 +26,14 @@ class InstallableAppTest extends TestCase
         $this->assertContains('maskable', array_column($manifest['icons'], 'purpose'));
 
         foreach ($manifest['icons'] as $icon) {
+            // „/icons/“ belegt Apache selbst (Alias auf seine eigenen Symbole) – dort käme 404 zurück.
+            $this->assertStringStartsNotWith('/icons/', $icon['src']);
             $file = public_path(ltrim($icon['src'], '/'));
             $this->assertFileExists($file);
             [$width, $height] = getimagesize($file) ?: [0, 0];
             $this->assertSame($icon['sizes'], $width.'x'.$height);
         }
-        $this->assertSame([180, 180], array_slice(getimagesize(public_path('icons/apple-touch-icon.png')) ?: [], 0, 2));
+        $this->assertSame([180, 180], array_slice(getimagesize(public_path('app-icons/apple-touch-icon.png')) ?: [], 0, 2));
     }
 
     public function test_patient_pages_are_installable_but_hospital_pages_are_not(): void
