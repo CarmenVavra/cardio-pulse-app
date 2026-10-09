@@ -14,6 +14,7 @@
 /auth.json
 /composer.phar
 /.deploy-target
+/UI_MOCKUPS
 /node_modules
 /public/build
 /public/hot
