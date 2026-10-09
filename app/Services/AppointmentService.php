@@ -122,6 +122,61 @@ class AppointmentService
     }
 
     /**
+     * Terminerinnerung per E-Mail für alle Videosprechstunden, die innerhalb der
+     * eingestellten Vorlaufzeit beginnen. Läuft alle paar Minuten über den Scheduler;
+     * jeder Termin bekommt höchstens eine Erinnerung.
+     *
+     * Wurde der Termin erst innerhalb der Vorlaufzeit vereinbart, hat der Patient die
+     * Terminbestätigung gerade bekommen – dann entfällt die Erinnerung.
+     *
+     * @return int Anzahl verschickter Erinnerungen
+     */
+    public function sendDueReminders(): int
+    {
+        $minutes = (int) config('cardiopulse.appointment_reminder_minutes');
+        if ($minutes <= 0) {
+            return 0;
+        }
+
+        $due = Appointment::query()
+            ->where('status', AppointmentStatus::Booked)
+            ->whereNull('reminded_at')
+            ->where('starts_at', '>', now())
+            ->where('starts_at', '<=', now()->addMinutes($minutes))
+            ->whereHas('patient', fn ($query) => $query->withoutTrashed())
+            ->with(['patient.user', 'doctor'])
+            ->get();
+
+        $sent = 0;
+        foreach ($due as $appointment) {
+            // Atomar markieren, damit sich überschneidende Läufe nicht doppelt senden.
+            $claimed = Appointment::query()->whereKey($appointment->id)->whereNull('reminded_at')->update(['reminded_at' => now()]);
+            if ($claimed === 0) {
+                continue;
+            }
+
+            if ($appointment->patient?->user === null
+                || $appointment->created_at->gt($appointment->starts_at->copy()->subMinutes($minutes))) {
+                continue;
+            }
+
+            if (! $this->notify($appointment, AppointmentNotification::REMINDER)) {
+                // Mailserver nicht erreichbar: beim nächsten Lauf erneut versuchen.
+                Appointment::query()->whereKey($appointment->id)->update(['reminded_at' => null]);
+
+                continue;
+            }
+
+            AuditLog::record('appointment.reminded', $appointment, [
+                'starts_at' => $appointment->starts_at->format('d.m.Y H:i'),
+            ]);
+            $sent++;
+        }
+
+        return $sent;
+    }
+
+    /**
      * Beim Löschen eines Patienten offene Termine absagen (ohne E-Mail – das Konto ist gesperrt).
      */
     public function cancelAllFor(Patient $patient, User $by): void
@@ -135,11 +190,14 @@ class AppointmentService
         });
     }
 
-    private function notify(Appointment $appointment, string $kind): void
+    /**
+     * @return bool false, wenn die E-Mail nicht verschickt werden konnte
+     */
+    private function notify(Appointment $appointment, string $kind): bool
     {
         $user = $appointment->patient?->user;
         if ($user === null) {
-            return;
+            return false;
         }
 
         try {
@@ -147,6 +205,10 @@ class AppointmentService
         } catch (TransportExceptionInterface $e) {
             // Mailserver nicht erreichbar: Der Termin gilt trotzdem und steht in der App.
             report($e);
+
+            return false;
         }
+
+        return true;
     }
 }

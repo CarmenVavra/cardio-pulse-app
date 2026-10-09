@@ -79,7 +79,7 @@ Die Ampelfarbe (`app/Enums/BloodPressureStatus.php`) ist in App und Krankenhaus 
 | **Alarm** (D3) | Rote Werte lösen Alarm aus – blinkendes Banner/Rahmen, Signalton (Web Audio, 960 Hz) bis zur Pflicht-Quittierung mit Maßnahme; Audit-Log |
 | **Privacy-Lock** (D6) | Nach 3 Min Inaktivität; Namen werden serverseitig ausgeblendet, Entsperren per PIN |
 | **Patienten** (D4) | 30-Tage-Verlauf, Kennzahlen, Medikation, Chat mit dem Patienten, PDF-Druckansicht, **KIS-Export als HL7 FHIR R4 Bundle** (LOINC 85354-9, 8480-6, 8462-4, 8867-4, Interpretation HH/H/N/L) |
-| **Videosprechstunden** (Patientenansicht → „Termin“) | Termin vereinbaren (Datum, Uhrzeit, 10–60 Min, Arzt, interner Anlass), keine Doppelbuchung je Arzt; Patient bekommt eine E-Mail (ohne Anlass/Diagnose); absagen; ab 10 Min vor Beginn bis 30 Min nach dem Ende „Videosprechstunde starten“ (ruft den Patienten per Video an); Übersicht unter „Anrufe“ (voreingestellt: nur eigene Termine der nächsten 14 Tage; umschaltbar auf alle Ärzte und 30 Tage, 3 Monate oder alle geplanten); im FHIR-Export als `Appointment` |
+| **Videosprechstunden** (Patientenansicht → „Termin“) | Termin vereinbaren (Datum, Uhrzeit, 10–60 Min, Arzt, interner Anlass), keine Doppelbuchung je Arzt; Patient bekommt eine E-Mail (ohne Anlass/Diagnose); absagen; ab 10 Min vor Beginn bis 30 Min nach dem Ende „Videosprechstunde starten“ (ruft den Patienten per Video an); Übersicht unter „Anrufe“ (voreingestellt: nur eigene Termine der nächsten 14 Tage; umschaltbar auf alle Ärzte und 30 Tage, 3 Monate oder alle geplanten); Erinnerungs-E-Mail an den Patienten 1 Stunde vorher (`CARDIOPULSE_REMINDER_MINUTES`, entfällt bei kurzfristig vereinbarten Terminen; braucht die geplante Aufgabe, siehe „Geplante Aufgabe“); im FHIR-Export als `Appointment` |
 | **Patienten verwalten** | Anlegen (inkl. App-Zugang), Bearbeiten, Löschen mit Bestätigung |
 | **Medikation** | Erfassen, Bearbeiten, Löschen; Schema morgens – mittags – abends; Änderungen durch den Patienten werden markiert |
 | **Monatsberichte** | Eingegangene Berichte je Monat mit Verlauf des Berichtsmonats |
@@ -134,7 +134,7 @@ Validierungsmeldungen und E-Mails sind deutsch (`lang/de/validation.php`, `lang/
 
 - Echtzeit per **Polling** (5 s) statt WebSockets – Austausch gegen Laravel Reverb vorgesehen.
 - **Videosprechstunde (WebRTC):** Der Verbindungsaufbau läuft über die App (Polling, `call_signals`, verschlüsselt, nach dem Auflegen gelöscht); Bild und Ton gehen direkt zwischen den Browsern (DTLS-SRTP). Der Arzt-Browser bietet an, der Patienten-Browser antwortet; nach einem Neuladen verbindet sich das Gespräch selbst neu. STUN: `stun.nextcloud.com` (Deutschland). In sehr abgeschotteten Netzen (Firmen-WLAN, manche Mobilfunknetze) braucht es zusätzlich einen **TURN-Server** (`CARDIOPULSE_TURN_*`, z. B. coturn auf einem kleinen VPS) – ohne ihn zeigt die App nach 25 s den Hinweis, über die Telefonnummer zu telefonieren. Ohne Kamera-Freigabe sieht und hört man die Gegenseite trotzdem.
-- **Terminerinnerung** (z. B. 1 Stunde vorher per E-Mail) fehlt noch – bräuchte eine geplante Aufgabe (Cron) auf dem Server. FHIR `Encounter` fehlt noch; der FHIR-Export ist ein Download, keine REST-API mit SMART on FHIR / OAuth 2.0.
+- FHIR `Encounter` fehlt noch; der FHIR-Export ist ein Download, keine REST-API mit SMART on FHIR / OAuth 2.0.
 - **Idee: Notfalltaste mit Standort** – Unterwegs misst der Patient keinen Blutdruck, deshalb eine große **Notfalltaste** in der App: Sie löst sofort einen Alarm im Krankenhaus aus (wie ein roter Wert, mit Pflicht-Quittierung) und wählt zugleich den Notruf 144 – die App selbst kann keinen Rettungswagen alarmieren, das geht nur über den Notruf bzw. die Leitstelle. Dabei wird – bei Einwilligung – der Standort mitgeschickt, damit das Krankenhaus ihn der Rettung durchgeben kann. Standort generell: Patienten, die ausdrücklich einwilligen (widerrufbar), übermitteln bei einem roten Wert, im Notfall-Screen oder per Notfalltaste ihren aktuellen Standort; das Krankenhaus sieht ihn im Alarm mit Kartenlink, damit die Rettung nicht an die Wohnadresse fährt. In der Web-App nur, solange sie geöffnet ist (Browser-Ortung mit Freigabe), kein Dauer-Tracking im Hintergrund – das ginge nur mit einer nativen App. Standort nur im Notfall speichern, nach Abschluss des Alarms löschen, Zugriffe protokollieren (Art. 9 DSGVO).
 - Die **Privacy-Lock-PIN** lässt sich nicht per E-Mail zurücksetzen – ein Admin setzt sie unter „Ärzte“ neu.
 - Der Chat ist **kein Notfallkanal** – die App weist auf den Notruf hin (Standard **144**, Rettung Österreich; in Deutschland `CARDIOPULSE_EMERGENCY_NUMBER=112`).
@@ -223,11 +223,29 @@ Danach `php artisan optimize:clear`. Die E-Mails werden sofort gesendet (kein Qu
 
 `backup.bat` (Doppelklick auf dem eigenen PC) legt auf dem Server mit `php artisan cardiopulse:backup` einen Schnappschuss der Datenbank an (`VACUUM INTO` – in sich stimmig, auch während Messwerte eintreffen) und lädt ihn zusammen mit der `.env` (enthält `APP_KEY`) als `backups\cardiopulse-JJJJ-MM-TT_HHMM.tar.gz` herunter. Der Ordner `backups\` ist nicht in Git.
 
-Auf dem Server bleiben die neuesten 14 Schnappschüsse in `storage/app/backups/`. Für eine tägliche Sicherung ohne PC im netcup-Panel unter „Geplante Aufgaben“ den Befehl `cd /cardio-pulse && /usr/local/php83/bin/php artisan cardiopulse:backup` eintragen.
+Auf dem Server bleiben die neuesten 14 Schnappschüsse in `storage/app/backups/`. Ist die geplante Aufgabe eingerichtet (siehe unten), sichert der Server zusätzlich jede Nacht um 02:00 Uhr selbst.
 
 **Wiederherstellen:** Archiv entpacken, die `.sqlite`-Datei als `database/database.sqlite` und die `.env` auf den Server kopieren, dann `./deploy.sh`.
 
 Die Sicherungen enthalten Gesundheitsdaten – verschlüsselt aufbewahren (z. B. BitLocker-USB-Stick), nicht per E-Mail versenden.
+
+### Geplante Aufgabe (Terminerinnerung, nächtliche Sicherung)
+
+Laravel erledigt zeitgesteuerte Arbeiten über `php artisan schedule:run` (festgelegt in `routes/console.php`):
+
+| Aufgabe | Wann |
+|---|---|
+| `cardiopulse:send-reminders` – Erinnerungs-E-Mail vor Videosprechstunden | alle 5 Minuten |
+| `cardiopulse:backup` – Schnappschuss der Datenbank | täglich 02:00 Uhr |
+
+Einmalig im netcup-Panel (Plesk) unter **Websites & Domains → Geplante Aufgaben → Aufgabe hinzufügen**:
+
+- Aufgabentyp: **Befehl ausführen**
+- Befehl: `cd /cardio-pulse && /usr/local/php83/bin/php artisan schedule:run`
+- Ausführen: **Cron-Stil** `*/5 * * * *`
+- Benachrichtigung: nur bei Fehlern
+
+Mit **„Jetzt ausführen“** testen – die Ausgabe nennt die gestarteten Aufgaben oder „No scheduled commands are ready to run.“. Von Hand: `php artisan cardiopulse:send-reminders`.
 
 ## Qualitätssicherung
 

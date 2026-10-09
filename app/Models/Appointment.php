@@ -20,6 +20,8 @@ use Illuminate\Support\Carbon;
  * @property AppointmentStatus $status
  * @property Carbon|null $cancelled_at
  * @property bool $cancelled_by_patient
+ * @property Carbon|null $reminded_at
+ * @property Carbon $created_at
  */
 class Appointment extends Model
 {
@@ -44,6 +46,7 @@ class Appointment extends Model
         'status',
         'cancelled_at',
         'cancelled_by_patient',
+        'reminded_at',
     ];
 
     /**
@@ -57,6 +60,7 @@ class Appointment extends Model
             'status' => AppointmentStatus::class,
             'cancelled_at' => 'datetime',
             'cancelled_by_patient' => 'boolean',
+            'reminded_at' => 'datetime',
         ];
     }
 

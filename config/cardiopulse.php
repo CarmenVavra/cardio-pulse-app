@@ -68,6 +68,13 @@ return [
     ],
 
     /*
+     | Terminerinnerung: So viele Minuten vor einer Videosprechstunde bekommt der Patient
+     | eine E-Mail. Verschickt von `php artisan schedule:run` (geplante Aufgabe am Server,
+     | alle 5 Minuten); 0 schaltet die Erinnerung ab.
+     */
+    'appointment_reminder_minutes' => (int) env('CARDIOPULSE_REMINDER_MINUTES', 60),
+
+    /*
      | Zwei-Faktor-Anmeldung für Ärzte: Bei true muss jeder Arzt sie nach der Anmeldung
      | einrichten, bevor er die App nutzen kann (empfohlen im Produktivbetrieb).
      */

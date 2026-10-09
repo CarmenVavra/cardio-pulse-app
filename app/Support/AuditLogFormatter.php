@@ -74,6 +74,7 @@ class AuditLogFormatter
         'appointment.scheduled' => 'Videosprechstunde vereinbart',
         'appointment.cancelled' => 'Termin abgesagt',
         'appointment.started' => 'Videosprechstunde gestartet',
+        'appointment.reminded' => 'Terminerinnerung per E-Mail gesendet',
         'message.sent' => 'Nachricht an Patient gesendet',
         'message.received' => 'Nachricht vom Patienten',
         'medication.created' => 'Medikament erfasst',

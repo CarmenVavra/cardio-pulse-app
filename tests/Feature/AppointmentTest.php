@@ -179,6 +179,76 @@ class AppointmentTest extends TestCase
             ->assertSee('Termine aller Ärzte anzeigen');
     }
 
+    public function test_patients_get_one_reminder_an_hour_before_the_consultation(): void
+    {
+        $doctor = $this->staff();
+        $patient = $this->patient();
+        $other = $this->patient();
+        $cancelled = $this->patient();
+        $appointment = $this->appointment($patient, $doctor, '2026-10-14 10:30');
+        $this->appointment($other, $doctor, '2026-10-14 13:00');
+        app(AppointmentService::class)->cancel($this->appointment($cancelled, $doctor, '2026-10-14 11:00'), $doctor);
+        Notification::fake();
+
+        // Noch zu früh: nichts verschickt.
+        $this->travelTo(Carbon::parse('2026-10-14 09:25'));
+        $this->artisan('cardiopulse:send-reminders')->expectsOutput('0 Erinnerungen verschickt.')->assertSuccessful();
+        Notification::assertNothingSent();
+
+        $this->travelTo(Carbon::parse('2026-10-14 09:30'));
+        $this->artisan('cardiopulse:send-reminders')->expectsOutput('1 Erinnerung verschickt.')->assertSuccessful();
+
+        Notification::assertSentToTimes($patient->user, AppointmentNotification::class, 1);
+        Notification::assertSentTo($patient->user, AppointmentNotification::class, function (AppointmentNotification $notification) use ($patient) {
+            $mail = $notification->toMail($patient->user);
+
+            return $notification->kind === AppointmentNotification::REMINDER
+                && $mail->subject === 'CardioPulse: Erinnerung – Videosprechstunde um 10:30 Uhr'
+                && str_contains(implode(' ', $mail->introLines), 'Mi., 14.10.2026 · 10:30–10:45 Uhr mit Dr. Miriam Weber');
+        });
+        Notification::assertNotSentTo($other->user, AppointmentNotification::class);
+        Notification::assertNotSentTo($cancelled->user, AppointmentNotification::class);
+        $this->assertNotNull($appointment->fresh()->reminded_at);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'appointment.reminded', 'auditable_id' => $appointment->id, 'user_id' => null]);
+
+        // Ein zweiter Lauf erinnert nicht noch einmal.
+        $this->travelTo(Carbon::parse('2026-10-14 09:35'));
+        $this->artisan('cardiopulse:send-reminders')->expectsOutput('0 Erinnerungen verschickt.');
+        Notification::assertSentToTimes($patient->user, AppointmentNotification::class, 1);
+
+        $this->actingAs($doctor)->get(route('audit.index'))->assertSee('Terminerinnerung per E-Mail gesendet');
+    }
+
+    public function test_no_reminder_for_short_notice_appointments_or_when_switched_off(): void
+    {
+        $doctor = $this->staff();
+        $patient = $this->patient();
+        $other = $this->patient();
+
+        // Erst 30 Minuten vorher vereinbart: Die Terminbestätigung reicht.
+        $this->travelTo(Carbon::parse('2026-10-14 10:00'));
+        $shortNotice = $this->appointment($patient, $doctor, '2026-10-14 10:30');
+        Notification::fake();
+        $this->artisan('cardiopulse:send-reminders')->expectsOutput('0 Erinnerungen verschickt.');
+        Notification::assertNothingSent();
+        $this->assertNotNull($shortNotice->fresh()->reminded_at);
+
+        config(['cardiopulse.appointment_reminder_minutes' => 0]);
+        $this->travelTo(Carbon::parse('2026-10-12 09:00'));
+        $this->appointment($other, $doctor, '2026-10-14 11:00');
+        $this->travelTo(Carbon::parse('2026-10-14 10:30'));
+        $this->artisan('cardiopulse:send-reminders')->expectsOutput('0 Erinnerungen verschickt.');
+        Notification::assertNotSentTo($other->user, AppointmentNotification::class, fn (AppointmentNotification $n) => $n->kind === AppointmentNotification::REMINDER);
+    }
+
+    public function test_reminders_and_backup_are_scheduled(): void
+    {
+        $this->artisan('schedule:list')
+            ->expectsOutputToContain('cardiopulse:send-reminders')
+            ->expectsOutputToContain('cardiopulse:backup')
+            ->assertSuccessful();
+    }
+
     public function test_hospital_cancels_and_the_patient_is_informed(): void
     {
         $doctor = $this->staff();

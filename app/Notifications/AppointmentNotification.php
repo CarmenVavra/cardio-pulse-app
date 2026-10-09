@@ -8,7 +8,8 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * E-Mail an den Patienten: neuer oder abgesagter Termin für eine Videosprechstunde.
+ * E-Mail an den Patienten: neuer oder abgesagter Termin für eine Videosprechstunde
+ * sowie die Erinnerung kurz vor Beginn.
  *
  * Sofort gesendet (kein Queue-Worker auf dem Webhosting). Keine Diagnosen oder
  * Messwerte in der E-Mail – nur Zeitpunkt, Arzt und der Hinweis auf die App.
@@ -18,6 +19,8 @@ class AppointmentNotification extends Notification
     public const SCHEDULED = 'scheduled';
 
     public const CANCELLED = 'cancelled';
+
+    public const REMINDER = 'reminder';
 
     public function __construct(
         public readonly Appointment $appointment,
@@ -48,6 +51,17 @@ class AppointmentNotification extends Notification
                 ->line('Ihr Termin für die Videosprechstunde wurde abgesagt:')
                 ->line($this->appointment->when().' mit '.$doctor)
                 ->line('Bei Fragen schreiben Sie uns eine Nachricht in der App.')
+                ->action('Zur App', route('patient.doctor'))
+                ->salutation('Ihr '.$app.'-Team');
+        }
+
+        if ($this->kind === self::REMINDER) {
+            return $mail
+                ->subject($app.': Erinnerung – Videosprechstunde um '.$this->appointment->starts_at->format('H:i').' Uhr')
+                ->line('Wir erinnern Sie an Ihre Videosprechstunde:')
+                ->line($this->appointment->when().' mit '.$doctor)
+                ->line('Bitte öffnen Sie kurz vorher die App und halten Sie Ihr Handy bereit. Ihr Arzt ruft Sie per Video an – erlauben Sie dann Kamera und Mikrofon.')
+                ->line('Falls Sie nicht können, sagen Sie den Termin bitte in der App ab.')
                 ->action('Zur App', route('patient.doctor'))
                 ->salutation('Ihr '.$app.'-Team');
         }
