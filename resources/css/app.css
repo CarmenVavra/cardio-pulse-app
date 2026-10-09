@@ -3446,6 +3446,122 @@ a.msg-badge:hover {
     gap: 10px;
 }
 
+.form-section__title {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+/* Zwei-Faktor-Anmeldung */
+
+.input--code {
+    max-width: 260px;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 20px;
+    letter-spacing: 0.15em;
+}
+
+.setup-steps {
+    list-style: none;
+    counter-reset: step;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.setup-steps > li {
+    counter-increment: step;
+    position: relative;
+    padding: 16px 0 0 48px;
+    border-top: var(--rule);
+}
+
+.setup-steps > li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 16px;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    background: var(--navy);
+    color: var(--ground);
+    font-weight: 800;
+}
+
+.setup-steps h2 {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+/* QR-Codes brauchen dunkle Module auf hellem Grund – auch im Dunkelmodus. */
+.qr-box {
+    display: inline-block;
+    margin: 8px 0;
+    padding: 12px;
+    background: #fff;
+    border: 2px solid var(--navy);
+}
+
+.qr-box svg {
+    display: block;
+    width: 200px;
+    height: 200px;
+}
+
+.secret-key code,
+.recovery-codes code {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 16px;
+    letter-spacing: 0.06em;
+}
+
+.secret-key code {
+    display: inline-block;
+    padding: 6px 10px;
+    background: var(--surface);
+    border: 1px solid var(--navy);
+    word-break: break-all;
+}
+
+.recovery-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 20px;
+    border: 2px solid var(--navy);
+    border-left-width: 8px;
+    background: var(--surface);
+}
+
+.recovery-box h2 {
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.recovery-codes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px 24px;
+    width: 100%;
+    margin: 0;
+    padding-left: 24px;
+}
+
+@media print {
+    body:has(.recovery-box) .h-top,
+    body:has(.recovery-box) .h-flash,
+    body:has(.recovery-box) .list-page > :not(.recovery-box),
+    .recovery-box [data-print] {
+        display: none !important;
+    }
+}
+
 @media (max-width: 640px) {
     .med-fields {
         grid-template-columns: 1fr;

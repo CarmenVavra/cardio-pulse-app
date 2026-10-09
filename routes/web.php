@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\PatientLoginController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\StaffLoginController;
+use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Hospital\AccountController;
 use App\Http\Controllers\Hospital\AlarmController;
 use App\Http\Controllers\Hospital\BoardController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Hospital\MessageController;
 use App\Http\Controllers\Hospital\MonthlyReportController;
 use App\Http\Controllers\Hospital\PatientController;
 use App\Http\Controllers\Hospital\PrivacyLockController;
+use App\Http\Controllers\Hospital\TwoFactorController;
 use App\Http\Controllers\Patient\AccountController as PatientAccountController;
 use App\Http\Controllers\Patient\CallController as PatientCallController;
 use App\Http\Controllers\Patient\DoctorController;
@@ -38,6 +40,9 @@ Route::redirect('/', '/login');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [StaffLoginController::class, 'create'])->name('login');
     Route::post('/login', [StaffLoginController::class, 'store'])->middleware('throttle:10,1');
+
+    Route::get('/login/zwei-faktor', [TwoFactorChallengeController::class, 'create'])->name('two-factor.challenge');
+    Route::post('/login/zwei-faktor', [TwoFactorChallengeController::class, 'store'])->middleware('throttle:10,1');
 
     Route::get('/app/login', [PatientLoginController::class, 'create'])->name('patient.login');
     Route::post('/app/login', [PatientLoginController::class, 'store'])->middleware('throttle:10,1');
@@ -63,56 +68,67 @@ Route::post('/logout', LogoutController::class)->middleware('auth')->name('logou
 */
 
 Route::middleware(['auth', 'role:staff'])->group(function () {
-    Route::get('/ueberwachung', [BoardController::class, 'index'])->name('board');
-    Route::get('/ueberwachung/live', [BoardController::class, 'live'])->name('board.live');
-
-    Route::post('/sperre', [PrivacyLockController::class, 'store'])->name('lock');
-    Route::post('/sperre/aufheben', [PrivacyLockController::class, 'destroy'])->middleware('throttle:10,1')->name('unlock');
-
+    // Zwei-Faktor-Anmeldung einrichten – auch erreichbar, solange sie vorgeschrieben, aber noch nicht eingerichtet ist.
     Route::middleware('unlocked')->group(function () {
-        Route::post('/alarme/{alarm}/quittieren', [AlarmController::class, 'acknowledge'])->name('alarms.acknowledge');
+        Route::get('/konto/zwei-faktor', [TwoFactorController::class, 'create'])->name('account.two-factor.create');
+        Route::post('/konto/zwei-faktor', [TwoFactorController::class, 'store'])->middleware('throttle:6,1')->name('account.two-factor.store');
+    });
 
-        Route::get('/patienten', [PatientController::class, 'index'])->name('patients.index');
-        Route::get('/patienten/neu', [PatientController::class, 'create'])->name('patients.create');
-        Route::post('/patienten', [PatientController::class, 'store'])->name('patients.store');
-        Route::get('/patienten/{patient}', [PatientController::class, 'show'])->name('patients.show');
-        Route::get('/patienten/{patient}/bearbeiten', [PatientController::class, 'edit'])->name('patients.edit');
-        Route::put('/patienten/{patient}', [PatientController::class, 'update'])->name('patients.update');
-        Route::delete('/patienten/{patient}', [PatientController::class, 'destroy'])->name('patients.destroy');
+    Route::middleware('two-factor')->group(function () {
+        Route::get('/ueberwachung', [BoardController::class, 'index'])->name('board');
+        Route::get('/ueberwachung/live', [BoardController::class, 'live'])->name('board.live');
 
-        Route::scopeBindings()->group(function () {
-            Route::post('/patienten/{patient}/medikation', [MedicationController::class, 'store'])->name('patients.medications.store');
-            Route::put('/patienten/{patient}/medikation/{medication}', [MedicationController::class, 'update'])->name('patients.medications.update');
-            Route::delete('/patienten/{patient}/medikation/{medication}', [MedicationController::class, 'destroy'])->name('patients.medications.destroy');
+        Route::post('/sperre', [PrivacyLockController::class, 'store'])->name('lock');
+        Route::post('/sperre/aufheben', [PrivacyLockController::class, 'destroy'])->middleware('throttle:10,1')->name('unlock');
+
+        Route::middleware('unlocked')->group(function () {
+            Route::post('/alarme/{alarm}/quittieren', [AlarmController::class, 'acknowledge'])->name('alarms.acknowledge');
+
+            Route::get('/patienten', [PatientController::class, 'index'])->name('patients.index');
+            Route::get('/patienten/neu', [PatientController::class, 'create'])->name('patients.create');
+            Route::post('/patienten', [PatientController::class, 'store'])->name('patients.store');
+            Route::get('/patienten/{patient}', [PatientController::class, 'show'])->name('patients.show');
+            Route::get('/patienten/{patient}/bearbeiten', [PatientController::class, 'edit'])->name('patients.edit');
+            Route::put('/patienten/{patient}', [PatientController::class, 'update'])->name('patients.update');
+            Route::delete('/patienten/{patient}', [PatientController::class, 'destroy'])->name('patients.destroy');
+
+            Route::scopeBindings()->group(function () {
+                Route::post('/patienten/{patient}/medikation', [MedicationController::class, 'store'])->name('patients.medications.store');
+                Route::put('/patienten/{patient}/medikation/{medication}', [MedicationController::class, 'update'])->name('patients.medications.update');
+                Route::delete('/patienten/{patient}/medikation/{medication}', [MedicationController::class, 'destroy'])->name('patients.medications.destroy');
+            });
+            Route::get('/patienten/{patient}/fhir', [ExportController::class, 'fhir'])->name('patients.fhir');
+            Route::get('/patienten/{patient}/bericht', [ExportController::class, 'report'])->name('patients.report');
+            Route::post('/patienten/{patient}/nachrichten', [MessageController::class, 'store'])->name('patients.messages.store');
+            Route::post('/patienten/{patient}/anrufe', [CallController::class, 'store'])->name('calls.store');
+
+            Route::get('/monatsberichte', [MonthlyReportController::class, 'index'])->name('reports.index');
+
+            Route::middleware('can:manage-doctors')->group(function () {
+                Route::get('/aerzte', [HospitalDoctorController::class, 'index'])->name('doctors.index');
+                Route::get('/aerzte/neu', [HospitalDoctorController::class, 'create'])->name('doctors.create');
+                Route::post('/aerzte', [HospitalDoctorController::class, 'store'])->name('doctors.store');
+                Route::get('/aerzte/{doctor}/bearbeiten', [HospitalDoctorController::class, 'edit'])->name('doctors.edit');
+                Route::put('/aerzte/{doctor}', [HospitalDoctorController::class, 'update'])->name('doctors.update');
+                Route::delete('/aerzte/{doctor}', [HospitalDoctorController::class, 'destroy'])->name('doctors.destroy');
+                Route::delete('/aerzte/{doctor}/zwei-faktor', [HospitalDoctorController::class, 'resetTwoFactor'])->name('doctors.two-factor.destroy');
+            });
+
+            Route::get('/anrufe', [CallController::class, 'index'])->name('calls.index');
+            Route::get('/anrufe/{call}', [CallController::class, 'show'])->name('calls.show');
+            Route::get('/anrufe/{call}/status', [CallController::class, 'status'])->name('calls.status');
+            Route::post('/anrufe/{call}/annehmen', [CallController::class, 'answer'])->name('calls.answer');
+            Route::post('/anrufe/{call}/beenden', [CallController::class, 'end'])->name('calls.end');
+            Route::put('/anrufe/{call}/notiz', [CallController::class, 'note'])->name('calls.note');
+
+            Route::get('/konto', [AccountController::class, 'edit'])->name('account.edit');
+            Route::put('/konto/passwort', [AccountController::class, 'updatePassword'])->middleware('throttle:6,1')->name('account.password');
+            Route::put('/konto/pin', [AccountController::class, 'updatePin'])->middleware('throttle:6,1')->name('account.pin');
+            Route::post('/konto/zwei-faktor/codes', [TwoFactorController::class, 'regenerate'])->middleware('throttle:6,1')->name('account.two-factor.recovery-codes');
+            Route::post('/konto/zwei-faktor/abschalten', [TwoFactorController::class, 'destroy'])->middleware('throttle:6,1')->name('account.two-factor.destroy');
+
+            Route::post('/demo/upload', DemoUploadController::class)->name('demo.upload');
         });
-        Route::get('/patienten/{patient}/fhir', [ExportController::class, 'fhir'])->name('patients.fhir');
-        Route::get('/patienten/{patient}/bericht', [ExportController::class, 'report'])->name('patients.report');
-        Route::post('/patienten/{patient}/nachrichten', [MessageController::class, 'store'])->name('patients.messages.store');
-        Route::post('/patienten/{patient}/anrufe', [CallController::class, 'store'])->name('calls.store');
-
-        Route::get('/monatsberichte', [MonthlyReportController::class, 'index'])->name('reports.index');
-
-        Route::middleware('can:manage-doctors')->group(function () {
-            Route::get('/aerzte', [HospitalDoctorController::class, 'index'])->name('doctors.index');
-            Route::get('/aerzte/neu', [HospitalDoctorController::class, 'create'])->name('doctors.create');
-            Route::post('/aerzte', [HospitalDoctorController::class, 'store'])->name('doctors.store');
-            Route::get('/aerzte/{doctor}/bearbeiten', [HospitalDoctorController::class, 'edit'])->name('doctors.edit');
-            Route::put('/aerzte/{doctor}', [HospitalDoctorController::class, 'update'])->name('doctors.update');
-            Route::delete('/aerzte/{doctor}', [HospitalDoctorController::class, 'destroy'])->name('doctors.destroy');
-        });
-
-        Route::get('/anrufe', [CallController::class, 'index'])->name('calls.index');
-        Route::get('/anrufe/{call}', [CallController::class, 'show'])->name('calls.show');
-        Route::get('/anrufe/{call}/status', [CallController::class, 'status'])->name('calls.status');
-        Route::post('/anrufe/{call}/annehmen', [CallController::class, 'answer'])->name('calls.answer');
-        Route::post('/anrufe/{call}/beenden', [CallController::class, 'end'])->name('calls.end');
-        Route::put('/anrufe/{call}/notiz', [CallController::class, 'note'])->name('calls.note');
-
-        Route::get('/konto', [AccountController::class, 'edit'])->name('account.edit');
-        Route::put('/konto/passwort', [AccountController::class, 'updatePassword'])->middleware('throttle:6,1')->name('account.password');
-        Route::put('/konto/pin', [AccountController::class, 'updatePin'])->middleware('throttle:6,1')->name('account.pin');
-
-        Route::post('/demo/upload', DemoUploadController::class)->name('demo.upload');
     });
 });
 

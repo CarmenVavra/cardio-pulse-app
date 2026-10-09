@@ -6,7 +6,9 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StaffLoginRequest;
 use App\Models\AuditLog;
+use App\Models\User;
 use App\Services\LoginThrottle;
+use App\Services\StaffLoginService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -23,37 +25,38 @@ class StaffLoginController extends Controller
         return view('auth.staff-login', compact('departments'));
     }
 
-    public function store(StaffLoginRequest $request, LoginThrottle $throttle): RedirectResponse
+    public function store(StaffLoginRequest $request, LoginThrottle $throttle, StaffLoginService $logins): RedirectResponse
     {
-        $throttle->ensureNotLocked($request->validated('username'), 'username');
+        $username = $request->validated('username');
+        $throttle->ensureNotLocked($username, 'username');
 
         $credentials = [
-            'username' => $request->validated('username'),
+            'username' => $username,
             'password' => $request->validated('password'),
             'role' => UserRole::Staff->value,
         ];
 
-        if (! Auth::attempt($credentials)) {
-            $throttle->failed($request->validated('username'));
-            AuditLog::record('auth.failed', null, ['username' => $request->validated('username')]);
+        if (! Auth::validate($credentials)) {
+            $throttle->failed($username);
+            AuditLog::record('auth.failed', null, ['username' => $username]);
 
             return back()
                 ->withErrors(['username' => 'Benutzerkennung oder Passwort ist falsch.'])
                 ->onlyInput('username', 'department');
         }
 
-        $throttle->succeeded($request->validated('username'));
-        $request->session()->regenerate();
-
+        $user = User::query()->where('role', UserRole::Staff)->where('username', $username)->firstOrFail();
         $department = $request->validated('department');
-        $request->session()->put([
-            'department' => $department,
-            'department_label' => config('cardiopulse.departments')[$department],
-            'sound_enabled' => $request->boolean('sound'),
-            'screen_locked' => false,
-        ]);
 
-        AuditLog::record('auth.login', null, ['department' => $department, 'sound' => $request->boolean('sound')]);
+        // Zwei-Faktor-Anmeldung: Die Fehlversuche bleiben gezählt, bis auch der Code stimmt.
+        if ($user->hasTwoFactor()) {
+            $logins->startTwoFactor($request, $user, $department, $request->boolean('sound'));
+
+            return redirect()->route('two-factor.challenge');
+        }
+
+        $throttle->succeeded($username);
+        $logins->complete($request, $user, $department, $request->boolean('sound'), false);
 
         return redirect()->intended(route('board'));
     }

@@ -6,8 +6,10 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DeleteDoctorRequest;
 use App\Http\Requests\DoctorRequest;
+use App\Http\Requests\ResetTwoFactorRequest;
 use App\Models\User;
 use App\Services\DoctorService;
+use App\Services\TwoFactorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -76,6 +78,15 @@ class DoctorController extends Controller
         return redirect()
             ->route('doctors.index')
             ->with('status', $doctor->displayName().' wurde gespeichert.');
+    }
+
+    public function resetTwoFactor(ResetTwoFactorRequest $request, User $doctor, TwoFactorService $twoFactor): RedirectResponse
+    {
+        $twoFactor->disable($doctor, $request->user());
+
+        return redirect()
+            ->route('doctors.edit', $doctor)
+            ->with('status', 'Die Zwei-Faktor-Anmeldung von '.$doctor->displayName().' wurde zurückgesetzt. Bei der nächsten Anmeldung genügt das Passwort.');
     }
 
     public function destroy(DeleteDoctorRequest $request, User $doctor, DoctorService $doctors): RedirectResponse

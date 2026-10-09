@@ -50,6 +50,12 @@ return [
     'trusted_proxies' => env('TRUSTED_PROXIES'),
 
     /*
+     | Zwei-Faktor-Anmeldung für Ärzte: Bei true muss jeder Arzt sie nach der Anmeldung
+     | einrichten, bevor er die App nutzen kann (empfohlen im Produktivbetrieb).
+     */
+    'require_two_factor' => (bool) env('CARDIOPULSE_REQUIRE_2FA', false),
+
+    /*
     |--------------------------------------------------------------------------
     | Erfassung
     |--------------------------------------------------------------------------

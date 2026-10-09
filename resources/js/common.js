@@ -73,9 +73,10 @@ export const formatDuration = (seconds, withHours = false) => {
  * Drucken-Buttons und <dialog>-Steuerung.
  */
 export function initCommon() {
-    // Sicherheitsabfrage vor endgültigen Aktionen (z. B. Medikament löschen)
+    // Sicherheitsabfrage vor endgültigen Aktionen (z. B. Medikament löschen) – am Formular
+    // oder an einem einzelnen Button, wenn ein Formular mehrere Aktionen hat.
     document.addEventListener('submit', (event) => {
-        const message = event.target.dataset?.confirm;
+        const message = event.submitter?.dataset?.confirm ?? event.target.dataset?.confirm;
         if (message && !window.confirm(message)) {
             event.preventDefault();
             event.stopImmediatePropagation();

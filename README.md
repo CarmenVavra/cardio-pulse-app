@@ -71,8 +71,8 @@ Demo-Daten neu erzeugen: `php artisan migrate:fresh --seed`
 | **Medikation** | Erfassen, Bearbeiten, Löschen; Schema morgens – mittags – abends; Änderungen durch den Patienten werden markiert |
 | **Monatsberichte** | Eingegangene Berichte je Monat mit Verlauf des Berichtsmonats |
 | **Anrufe** (D5) | Arzt ↔ Patient in beide Richtungen inkl. Klingeln, Annehmen/Ablehnen, Gesprächsdauer, Gesprächsnotiz |
-| **Ärzte** (nur Admins) | Anlegen, Bearbeiten (Profil, Benutzerkennung, Passwort, PIN, Admin-Rechte), Löschen mit Übergabe der Patienten an einen anderen Arzt; eigenes Konto, eigene Admin-Rechte und letzter Arzt sind geschützt |
-| **Mein Konto** (Klick auf den eigenen Namen oben rechts) | Eigenes Passwort und Privacy-Lock-PIN ändern |
+| **Ärzte** (nur Admins) | Anlegen, Bearbeiten (Profil, Benutzerkennung, Passwort, PIN, Admin-Rechte, Zwei-Faktor-Anmeldung zurücksetzen), Löschen mit Übergabe der Patienten an einen anderen Arzt; eigenes Konto, eigene Admin-Rechte und letzter Arzt sind geschützt |
+| **Mein Konto** (Klick auf den eigenen Namen oben rechts) | Eigenes Passwort und Privacy-Lock-PIN ändern, Zwei-Faktor-Anmeldung einrichten (QR-Code), Wiederherstellungscodes erneuern |
 
 ### Patienten-App
 
@@ -98,6 +98,7 @@ Alle sicherheitsrelevanten Aktionen (Alarm quittieren, Export, Anlegen/Ändern/L
 | Maßnahme | Umsetzung |
 |---|---|
 | Admin-Rolle | Nur Admins sehen und nutzen „Ärzte“ (anlegen, bearbeiten, löschen, Admin-Rechte vergeben). Die eigenen Admin-Rechte kann nur ein anderer Admin entziehen – so bleibt immer mindestens ein Admin |
+| Zwei-Faktor-Anmeldung (Ärzte) | Nach dem Passwort ein 6-stelliger Code aus einer Authenticator-App (TOTP, RFC 6238 – Google/Microsoft Authenticator, 1Password, FreeOTP); jeder Code nur einmal; 8 Wiederherstellungscodes für den Notfall; Schlüssel verschlüsselt gespeichert; falsche Codes zählen zur Login-Sperre; nach 5 Min ohne Code beginnt die Anmeldung neu. Mit `CARDIOPULSE_REQUIRE_2FA=true` für alle Ärzte Pflicht. Ein Admin setzt sie bei verlorenem Handy zurück |
 | Passwort vergessen | Link per E-Mail (60 Min gültig, nur einmal verwendbar, max. 1 Anforderung pro Minute und Konto); die Antwort verrät nicht, ob es ein Konto gibt; die E-Mail-Adresse steht nicht im Link; nach dem Zurücksetzen enden alle Sitzungen. Ärzte und Patienten haben je eine eigene Ansicht |
 | Passwort-Raten | Nach 5 Fehlversuchen ist die Anmeldung für dieses Konto (je IP-Adresse) 5 Minuten gesperrt; zusätzlich max. 10 Login-Anfragen pro Minute je IP |
 | Privacy-Lock-PIN | Nach 5 falschen PINs wird die Sitzung beendet; die Meldung zeigt die verbleibenden Versuche |
@@ -160,6 +161,7 @@ In der `.env` anpassen:
 | `DB_CONNECTION` | `sqlite` (Datei `database/database.sqlite` wird angelegt) – alternativ MariaDB mit `mysql` und `DB_*` |
 | `TRUSTED_PROXIES` | leer lassen (nur hinter einem eigenen Reverse-Proxy setzen) |
 | `MAIL_*` | Postfach für „Passwort vergessen“, siehe unten |
+| `CARDIOPULSE_REQUIRE_2FA` | `true`, sobald alle Ärzte ein Handy mit Authenticator-App haben – dann muss jeder die Zwei-Faktor-Anmeldung einrichten |
 
 Gibt es eine Zeile doppelt, gilt die untere – geänderte Werte daher direkt in der vorhandenen Zeile eintragen.
 
@@ -172,7 +174,7 @@ php artisan cardiopulse:create-doctor
 
 Zum Schluss im Panel den **Document Root** der Domain auf `/cardio-pulse/public` setzen.
 
-Ist kein Admin mehr erreichbar, vergibt `php artisan cardiopulse:make-admin <benutzerkennung>` die Admin-Rechte auf dem Server.
+Ist kein Admin mehr erreichbar, vergibt `php artisan cardiopulse:make-admin <benutzerkennung>` die Admin-Rechte auf dem Server; `php artisan cardiopulse:reset-two-factor <benutzerkennung>` setzt die Zwei-Faktor-Anmeldung zurück (Handy und Wiederherstellungscodes verloren).
 
 ### E-Mail (Passwort vergessen)
 

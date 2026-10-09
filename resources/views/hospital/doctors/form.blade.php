@@ -96,6 +96,26 @@
             </div>
         </form>
 
+        @if ($editing && ! $isSelf)
+            <section class="form-section" aria-labelledby="two-factor-heading">
+                <h2 id="two-factor-heading" class="form-section__title">Zwei-Faktor-Anmeldung</h2>
+                @if ($errors->twoFactorReset->any())
+                    <div class="alert alert--error" role="alert">{{ $errors->twoFactorReset->first() }}</div>
+                @endif
+                @if ($doctor->hasTwoFactor())
+                    <p class="meta">Eingerichtet seit {{ $doctor->two_factor_confirmed_at?->format('d.m.Y') }}. Handy verloren und keine Wiederherstellungscodes mehr? Nach dem Zurücksetzen genügt bei der nächsten Anmeldung das Passwort.</p>
+                    <form method="POST" action="{{ route('doctors.two-factor.destroy', $doctor) }}"
+                          data-confirm="Zwei-Faktor-Anmeldung von {{ $doctor->displayName() }} wirklich zurücksetzen?">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn--outline">Zwei-Faktor-Anmeldung zurücksetzen</button>
+                    </form>
+                @else
+                    <p class="meta">Nicht eingerichtet. {{ $doctor->displayName() }} richtet sie selbst unter „Mein Konto“ ein.</p>
+                @endif
+            </section>
+        @endif
+
         @if ($editing)
             <form method="POST" action="{{ route('doctors.destroy', $doctor) }}" class="danger-zone"
                   data-confirm="{{ $doctor->displayName() }} wirklich löschen? Die Anmeldung wird sofort gesperrt.">

@@ -18,6 +18,7 @@
                         <th scope="col" class="hide-sm">E-Mail</th>
                         <th scope="col" class="hide-md">Telefon</th>
                         <th scope="col" class="hide-md">Erreichbar bis</th>
+                        <th scope="col" class="hide-md"><abbr title="Zwei-Faktor-Anmeldung">2FA</abbr></th>
                         <th scope="col">Patienten</th>
                         <th scope="col"><span class="sr-only">Aktion</span></th>
                     </tr>
@@ -41,6 +42,7 @@
                             <td class="hide-sm">{{ $doctor->email }}</td>
                             <td class="hide-md">{{ $doctor->phone ?? '—' }}</td>
                             <td class="hide-md">{{ $doctor->available_until ? $doctor->available_until.' Uhr' : '—' }}</td>
+                            <td class="hide-md">{{ $doctor->hasTwoFactor() ? 'Ja' : 'Nein' }}</td>
                             <td class="tabular">{{ $doctor->patients_count }}</td>
                             <td><a class="btn btn--outline btn--sm" href="{{ route('doctors.edit', $doctor) }}">Bearbeiten<span class="sr-only">: {{ $doctor->displayName() }}</span></a></td>
                         </tr>

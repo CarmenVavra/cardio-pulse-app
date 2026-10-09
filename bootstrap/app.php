@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\EnsureScreenUnlocked;
+use App\Http\Middleware\EnsureTwoFactorEnabled;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureRole::class,
             'unlocked' => EnsureScreenUnlocked::class,
+            'two-factor' => EnsureTwoFactorEnabled::class,
         ]);
 
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('app', 'app/*')
