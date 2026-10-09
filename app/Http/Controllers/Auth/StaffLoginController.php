@@ -28,6 +28,15 @@ class StaffLoginController extends Controller
     public function store(StaffLoginRequest $request, LoginThrottle $throttle, StaffLoginService $logins): RedirectResponse
     {
         $username = $request->validated('username');
+
+        // Benutzerkennungen enthalten nie ein „@“ – das ist ein Patient auf der falschen Seite.
+        if (str_contains($username, '@')) {
+            return back()
+                ->withErrors(['username' => 'Das ist die Anmeldung für Ärzte – hier gilt die Benutzerkennung (z. B. m.weber), nicht die E-Mail-Adresse.'])
+                ->with('patient_hint', true)
+                ->onlyInput('department');
+        }
+
         $throttle->ensureNotLocked($username, 'username');
 
         $credentials = [

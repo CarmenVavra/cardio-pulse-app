@@ -18,7 +18,7 @@
             @csrf
             <div class="field">
                 <label class="field__label" for="email">E-Mail</label>
-                <input class="input" id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="email" inputmode="email" required autofocus @error('email') aria-invalid="true" @enderror>
+                <input class="input" id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="username" inputmode="email" required autofocus @error('email') aria-invalid="true" @enderror>
             </div>
             <div class="field">
                 <label class="field__label" for="password">Passwort</label>

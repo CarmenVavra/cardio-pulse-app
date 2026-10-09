@@ -1,7 +1,13 @@
 <x-layouts.staff-auth title="Anmelden">
     <h1>Anmelden</h1>
 
-    @if ($errors->any())
+    @if (session('patient_hint'))
+        <div class="alert alert--error stack stack--sm" role="alert">
+            <span>{{ $errors->first() }}</span>
+            <span><b>Patientin oder Patient?</b> Sie melden sich in der Patienten-App mit Ihrer E-Mail-Adresse an.</span>
+            <a class="btn btn--primary btn--block" href="{{ route('patient.login') }}">Zur Patienten-App <span aria-hidden="true">→</span></a>
+        </div>
+    @elseif ($errors->any())
         <div class="alert alert--error" role="alert">{{ $errors->first() }}</div>
     @endif
 
