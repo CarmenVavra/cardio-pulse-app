@@ -221,7 +221,7 @@ Danach `php artisan optimize:clear`. Die E-Mails werden sofort gesendet (kein Qu
 
 ### Updates
 
-1. Änderungen auf GitHub pushen, dann auf dem eigenen PC `upload-assets.bat` ausführen (nur nötig, wenn sich CSS/JS geändert hat; warnt, wenn der lokale Stand von GitHub abweicht).
+1. Änderungen auf GitHub pushen, dann auf dem eigenen PC `upload-assets.bat` ausführen (nur nötig, wenn sich CSS/JS geändert hat; warnt, wenn der lokale Stand von GitHub abweicht). Es legt dabei `public/build/.source-commit` ab – den letzten Commit, der CSS/JS geändert hat. Passt das nicht zum Stand auf GitHub, zeigt `deploy.sh` am Ende **„ACHTUNG: Design/JavaScript auf dem Server sind NICHT aktuell“** – dann einfach `upload-assets.bat` nachholen.
 2. Auf dem Server:
 
    ```bash

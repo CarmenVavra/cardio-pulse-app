@@ -26,6 +26,13 @@ echo ==^> Assets bauen
 call npm run build
 if errorlevel 1 goto failed
 
+rem Versionsangabe fuer deploy.sh: letzter Commit, der CSS/JS geaendert hat
+rem ("-dirty" bei ungespeicherten Aenderungen). deploy.sh warnt, wenn sie nicht passt.
+set ASSETS=
+for /f %%i in ('git log -1 --format^=%%H -- resources/css resources/js package.json package-lock.json vite.config.js') do set ASSETS=%%i
+git diff --quiet HEAD -- resources/css resources/js package.json package-lock.json vite.config.js || set ASSETS=%ASSETS%-dirty
+> public\build\.source-commit echo %ASSETS%
+
 echo ==^> Hochladen nach %TARGET%:cardio-pulse/public/build
 tar --format ustar -czf - -C public build | ssh %TARGET% "rm -rf cardio-pulse/public/build && tar -xzf - -C cardio-pulse/public"
 if errorlevel 1 goto failed

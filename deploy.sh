@@ -38,6 +38,35 @@ composer_cmd() {
     COMPOSER=("$PHP" composer.phar)
 }
 
+# Dateien, aus denen Vite CSS/JS baut – gleiche Liste wie in upload-assets.bat.
+ASSET_SOURCES=(resources/css resources/js package.json package-lock.json vite.config.js)
+
+# Ohne Node.js baut upload-assets.bat die Assets auf dem eigenen PC und legt dabei
+# public/build/.source-commit ab. Passt diese Angabe nicht zum Stand von GitHub,
+# wurde upload-assets.bat vergessen – dann deutlich warnen (kein Abbruch).
+check_uploaded_assets() {
+    local expected uploaded=""
+    expected="$(git log -1 --format=%H -- "${ASSET_SOURCES[@]}")"
+    if [ -f public/build/.source-commit ]; then
+        uploaded="$(tr -d '\r\n ' < public/build/.source-commit)"
+    fi
+
+    if [ "$uploaded" = "$expected" ]; then
+        echo "==> Assets: aktuell (passen zum Stand auf GitHub)"
+        return
+    fi
+
+    echo
+    echo "!!! ACHTUNG: Design/JavaScript auf dem Server sind NICHT aktuell."
+    echo "!!! Bitte auf dem eigenen PC upload-assets.bat ausführen – deploy.sh danach nicht noch einmal nötig."
+    if [ -z "$uploaded" ]; then
+        echo "    (Hochgeladener Stand unbekannt – upload-assets.bat wurde noch nie mit Versionsangabe ausgeführt.)"
+    elif [[ "$uploaded" == *-dirty ]]; then
+        echo "    (Hochgeladen wurden lokal geänderte Assets, die so nicht auf GitHub stehen.)"
+    fi
+    echo
+}
+
 # Alles steht in einer Funktion: Bash liest sie vollständig ein, bevor sie läuft –
 # so bleibt der Ablauf stabil, auch wenn „git pull“ diese Datei aktualisiert.
 main() {
@@ -90,6 +119,10 @@ main() {
     # falsche Pfade und führten zu „open_basedir“-Fehlern.
     echo "==> Caches leeren"
     "$PHP" artisan optimize:clear
+
+    if ! $build_assets; then
+        check_uploaded_assets
+    fi
 
     echo "Fertig."
 }
