@@ -79,6 +79,7 @@ Die Ampelfarbe (`app/Enums/BloodPressureStatus.php`) ist in App und Krankenhaus 
 | **Alarm** (D3) | Rote Werte lösen Alarm aus – blinkendes Banner/Rahmen, Signalton (Web Audio, 960 Hz) bis zur Pflicht-Quittierung mit Maßnahme; Audit-Log |
 | **Privacy-Lock** (D6) | Nach 3 Min Inaktivität; Namen werden serverseitig ausgeblendet, Entsperren per PIN |
 | **Patienten** (D4) | 30-Tage-Verlauf, Kennzahlen, Medikation, Chat mit dem Patienten, PDF-Druckansicht, **KIS-Export als HL7 FHIR R4 Bundle** (LOINC 85354-9, 8480-6, 8462-4, 8867-4, Interpretation HH/H/N/L) |
+| **Videosprechstunden** (Patientenansicht → „Termin“) | Termin vereinbaren (Datum, Uhrzeit, 10–60 Min, Arzt, interner Anlass), keine Doppelbuchung je Arzt; Patient bekommt eine E-Mail (ohne Anlass/Diagnose); absagen; ab 10 Min vor Beginn bis 30 Min nach dem Ende „Videosprechstunde starten“ (ruft den Patienten per Video an); Übersicht der nächsten 14 Tage unter „Anrufe“; im FHIR-Export als `Appointment` |
 | **Patienten verwalten** | Anlegen (inkl. App-Zugang), Bearbeiten, Löschen mit Bestätigung |
 | **Medikation** | Erfassen, Bearbeiten, Löschen; Schema morgens – mittags – abends; Änderungen durch den Patienten werden markiert |
 | **Monatsberichte** | Eingegangene Berichte je Monat mit Verlauf des Berichtsmonats |
@@ -96,6 +97,7 @@ Die Ampelfarbe (`app/Enums/BloodPressureStatus.php`) ist in App und Krankenhaus 
 | **Monat** (M5) | Monatskalender, Versand an das Krankenhaus (erneut senden möglich), PDF für den Hausarzt |
 | **Arzt** (M6/M7) | Anruf an Arzt oder Zentrale, eingehende Anrufe, Videosprechstunde mit Kamera und Mikrofon des Handys, **Chat mit der Klinik** (Nachrichten lesen und beantworten, Lesebestätigung) |
 | **Medikation** | Eigene Medikation erfassen, bearbeiten, löschen |
+| **Termine** | Nächste Videosprechstunde auf der Startseite, alle Termine unter „Arzt“; vor Beginn selbst absagen (das Krankenhaus bekommt eine Chat-Nachricht) |
 | **Mein Konto** (Link auf der Startseite) | Passwort ändern, Abmelden |
 
 ### Löschen und Nachverfolgbarkeit
@@ -132,8 +134,8 @@ Validierungsmeldungen und E-Mails sind deutsch (`lang/de/validation.php`, `lang/
 
 - Echtzeit per **Polling** (5 s) statt WebSockets – Austausch gegen Laravel Reverb vorgesehen.
 - **Videosprechstunde (WebRTC):** Der Verbindungsaufbau läuft über die App (Polling, `call_signals`, verschlüsselt, nach dem Auflegen gelöscht); Bild und Ton gehen direkt zwischen den Browsern (DTLS-SRTP). Der Arzt-Browser bietet an, der Patienten-Browser antwortet; nach einem Neuladen verbindet sich das Gespräch selbst neu. STUN: `stun.nextcloud.com` (Deutschland). In sehr abgeschotteten Netzen (Firmen-WLAN, manche Mobilfunknetze) braucht es zusätzlich einen **TURN-Server** (`CARDIOPULSE_TURN_*`, z. B. coturn auf einem kleinen VPS) – ohne ihn zeigt die App nach 25 s den Hinweis, über die Telefonnummer zu telefonieren. Ohne Kamera-Freigabe sieht und hört man die Gegenseite trotzdem.
-- **Terminvergabe** für Videosprechstunden (FHIR `Appointment`) und FHIR `Encounter` fehlen noch; der FHIR-Export ist ein Download, keine REST-API mit SMART on FHIR / OAuth 2.0.
-- **Idee: Standort im Notfall** – Patienten, die ausdrücklich einwilligen (widerrufbar), übermitteln bei einem roten Wert bzw. im Notfall-Screen ihren aktuellen Standort; das Krankenhaus sieht ihn im Alarm mit Kartenlink, damit die Rettung nicht an die Wohnadresse fährt. In der Web-App nur, solange sie geöffnet ist (Browser-Ortung mit Freigabe), kein Dauer-Tracking im Hintergrund – das ginge nur mit einer nativen App. Standort nur im Notfall speichern, nach Abschluss des Alarms löschen, Zugriffe protokollieren (Art. 9 DSGVO).
+- **Terminerinnerung** (z. B. 1 Stunde vorher per E-Mail) fehlt noch – bräuchte eine geplante Aufgabe (Cron) auf dem Server. FHIR `Encounter` fehlt noch; der FHIR-Export ist ein Download, keine REST-API mit SMART on FHIR / OAuth 2.0.
+- **Idee: Notfalltaste mit Standort** – Unterwegs misst der Patient keinen Blutdruck, deshalb eine große **Notfalltaste** in der App: Sie löst sofort einen Alarm im Krankenhaus aus (wie ein roter Wert, mit Pflicht-Quittierung) und wählt zugleich den Notruf 144 – die App selbst kann keinen Rettungswagen alarmieren, das geht nur über den Notruf bzw. die Leitstelle. Dabei wird – bei Einwilligung – der Standort mitgeschickt, damit das Krankenhaus ihn der Rettung durchgeben kann. Standort generell: Patienten, die ausdrücklich einwilligen (widerrufbar), übermitteln bei einem roten Wert, im Notfall-Screen oder per Notfalltaste ihren aktuellen Standort; das Krankenhaus sieht ihn im Alarm mit Kartenlink, damit die Rettung nicht an die Wohnadresse fährt. In der Web-App nur, solange sie geöffnet ist (Browser-Ortung mit Freigabe), kein Dauer-Tracking im Hintergrund – das ginge nur mit einer nativen App. Standort nur im Notfall speichern, nach Abschluss des Alarms löschen, Zugriffe protokollieren (Art. 9 DSGVO).
 - Die **Privacy-Lock-PIN** lässt sich nicht per E-Mail zurücksetzen – ein Admin setzt sie unter „Ärzte“ neu.
 - Der Chat ist **kein Notfallkanal** – die App weist auf den Notruf hin (Standard **144**, Rettung Österreich; in Deutschland `CARDIOPULSE_EMERGENCY_NUMBER=112`).
 - Bluetooth-Import und Foto-Scan (OCR) sind nur in nativen Apps sinnvoll – in der Web-App erscheint ein Hinweis.

@@ -2806,6 +2806,95 @@ a.user-chip[aria-current="page"] .user-chip__name {
     outline: none;
 }
 
+/* Videosprechstunden in der Patientenansicht */
+.detail__section {
+    padding: 14px 28px 20px;
+    border-top: var(--rule);
+}
+
+.detail__section:focus {
+    outline: none;
+}
+
+.detail__section h2 {
+    font-size: 16px;
+    letter-spacing: 0;
+    margin-bottom: 10px;
+}
+
+.appointment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.appointment-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px 16px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border-left: 6px solid var(--taupe);
+}
+
+.appointment-row.is-due {
+    border-left-color: var(--cyan);
+}
+
+.appointment-row__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.appointment-history {
+    margin: 4px 0 0;
+    padding-left: 18px;
+}
+
+.appointment-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px 12px;
+}
+
+.data-table tr.is-due td:first-child {
+    box-shadow: inset 6px 0 0 var(--cyan);
+}
+
+/* Patienten-App */
+.appointment-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: inherit;
+    text-decoration: none;
+    border-left: 6px solid var(--cyan);
+}
+
+.appointment-card__icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    background: var(--navy);
+    color: var(--ground);
+}
+
+.appointment-item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+}
+
+.appointment-item + .appointment-item {
+    border-top: 1px solid var(--taupe);
+}
+
 .detail__chat h2 {
     font-size: 16px;
     letter-spacing: 0;

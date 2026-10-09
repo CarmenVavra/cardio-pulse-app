@@ -30,6 +30,7 @@
                 @csrf
                 <button type="submit" class="btn btn--primary"><span class="btn__lead"><x-icon name="phone" size="18" stroke="2.2" />Anrufen</span></button>
             </form>
+            <a class="btn btn--outline" href="#termine"><span class="btn__lead"><x-icon name="calendar" size="18" />Termin</span></a>
             <a class="btn btn--outline" href="#nachrichten"><span class="btn__lead"><x-icon name="message-square" size="18" />Nachricht</span></a>
             <a class="btn btn--outline" href="{{ route('patients.report', [$patient, ...$exportQuery]) }}"><span class="btn__lead"><x-icon name="file-text" size="18" />PDF / KIS-Export</span></a>
             <a class="btn btn--outline" href="{{ route('patients.edit', $patient) }}">Bearbeiten<span class="sr-only">: {{ $patient->fullName() }}</span></a>
@@ -94,6 +95,8 @@
             ]" />
         </section>
     </div>
+
+    @include('hospital.partials.appointments')
 
     <section class="detail__chat" id="nachrichten" aria-labelledby="chat-title" tabindex="-1">
         <h2 id="chat-title">Nachrichten</h2>

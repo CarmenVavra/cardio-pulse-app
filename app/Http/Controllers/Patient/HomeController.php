@@ -22,7 +22,8 @@ class HomeController extends PatientAreaController
 
         $month = $reports->summary($patient, now());
         $unreadMessages = $patient->messages()->fromClinic()->unread()->count();
+        $nextAppointment = $patient->appointments()->upcoming()->with('doctor')->orderBy('starts_at')->first();
 
-        return view('patient.home', compact('patient', 'today', 'month', 'unreadMessages'));
+        return view('patient.home', compact('patient', 'today', 'month', 'unreadMessages', 'nextAppointment'));
     }
 }

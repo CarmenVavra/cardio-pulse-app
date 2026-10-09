@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\CallSignalController;
 use App\Http\Controllers\Hospital\AccountController;
 use App\Http\Controllers\Hospital\AlarmController;
+use App\Http\Controllers\Hospital\AppointmentController;
 use App\Http\Controllers\Hospital\AuditLogController;
 use App\Http\Controllers\Hospital\BoardController;
 use App\Http\Controllers\Hospital\CallController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Hospital\PatientController;
 use App\Http\Controllers\Hospital\PrivacyLockController;
 use App\Http\Controllers\Hospital\TwoFactorController;
 use App\Http\Controllers\Patient\AccountController as PatientAccountController;
+use App\Http\Controllers\Patient\AppointmentController as PatientAppointmentController;
 use App\Http\Controllers\Patient\CallController as PatientCallController;
 use App\Http\Controllers\Patient\DoctorController;
 use App\Http\Controllers\Patient\HomeController;
@@ -103,6 +105,9 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
             Route::get('/patienten/{patient}/bericht', [ExportController::class, 'report'])->name('patients.report');
             Route::post('/patienten/{patient}/nachrichten', [MessageController::class, 'store'])->name('patients.messages.store');
             Route::post('/patienten/{patient}/anrufe', [CallController::class, 'store'])->name('calls.store');
+            Route::post('/patienten/{patient}/termine', [AppointmentController::class, 'store'])->name('patients.appointments.store');
+            Route::post('/termine/{appointment}/absagen', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
+            Route::post('/termine/{appointment}/starten', [AppointmentController::class, 'start'])->name('appointments.start');
 
             Route::get('/monatsberichte', [MonthlyReportController::class, 'index'])->name('reports.index');
 
@@ -160,6 +165,7 @@ Route::prefix('app')->name('patient.')->middleware(['auth', 'role:patient'])->gr
     Route::get('/monat/{month}/pdf', [MonthController::class, 'print'])->where('month', '\d{4}-\d{2}')->name('month.print');
 
     Route::get('/arzt', [DoctorController::class, 'index'])->name('doctor');
+    Route::post('/termine/{appointment}/absagen', [PatientAppointmentController::class, 'cancel'])->name('appointments.cancel');
 
     Route::get('/konto', [PatientAccountController::class, 'edit'])->name('account.edit');
     Route::put('/konto/passwort', [PatientAccountController::class, 'updatePassword'])->middleware('throttle:6,1')->name('account.password');

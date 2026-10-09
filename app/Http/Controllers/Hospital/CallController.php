@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveCallNoteRequest;
 use App\Models\Call;
 use App\Models\Patient;
+use App\Services\AppointmentService;
 use App\Services\CallService;
 use App\Services\CallSignalService;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +20,7 @@ use Illuminate\View\View;
  */
 class CallController extends Controller
 {
-    public function index(): View
+    public function index(AppointmentService $appointmentService): View
     {
         $openCalls = Call::query()->open()->whereHas('patient')->with(['patient', 'user'])->latest()->get();
         $recentCalls = Call::query()
@@ -30,7 +31,9 @@ class CallController extends Controller
             ->limit(25)
             ->get();
 
-        return view('hospital.calls.index', compact('openCalls', 'recentCalls'));
+        $appointments = $appointmentService->upcoming();
+
+        return view('hospital.calls.index', compact('openCalls', 'recentCalls', 'appointments'));
     }
 
     public function store(Request $request, Patient $patient, CallService $calls): RedirectResponse

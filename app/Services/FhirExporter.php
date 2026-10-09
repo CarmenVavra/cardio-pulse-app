@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\Appointment;
 use App\Models\Measurement;
 use App\Models\Patient;
 use Illuminate\Support\Carbon;
 
 /**
- * HL7 FHIR R4 Export (KIS-Anbindung): Patient + Blutdruck-Observations als Bundle.
+ * HL7 FHIR R4 Export (KIS-Anbindung): Patient, Blutdruck-Observations und Termine der
+ * Videosprechstunde (Appointment) als Bundle.
  *
  * LOINC: 85354-9 Blutdruck-Panel · 8480-6 systolisch · 8462-4 diastolisch · 8867-4 Puls.
  */
@@ -46,6 +48,19 @@ class FhirExporter
             }
         }
 
+        $appointments = $patient->appointments()
+            ->whereBetween('starts_at', [$from, $to])
+            ->with('doctor')
+            ->orderBy('starts_at')
+            ->get();
+
+        foreach ($appointments as $appointment) {
+            $entries[] = [
+                'fullUrl' => 'urn:uuid:appointment-'.$appointment->id,
+                'resource' => $this->appointment($patient, $appointment),
+            ];
+        }
+
         return [
             'resourceType' => 'Bundle',
             'type' => 'collection',
@@ -53,6 +68,41 @@ class FhirExporter
             'total' => count($entries),
             'entry' => $entries,
         ];
+    }
+
+    /**
+     * Videosprechstunde als FHIR Appointment (virtueller Termin, ServiceType „Videosprechstunde“).
+     *
+     * @return array<string, mixed>
+     */
+    private function appointment(Patient $patient, Appointment $appointment): array
+    {
+        $participants = [[
+            'actor' => ['reference' => 'urn:uuid:patient-'.$patient->patient_number, 'display' => $patient->fullName()],
+            'status' => 'accepted',
+        ]];
+
+        if ($appointment->doctor !== null) {
+            $participants[] = [
+                'actor' => ['display' => $appointment->doctor->displayName()],
+                'status' => 'accepted',
+            ];
+        }
+
+        return array_filter([
+            'resourceType' => 'Appointment',
+            'id' => 'appointment-'.$appointment->id,
+            'status' => $appointment->status->value,
+            'serviceType' => [['text' => 'Videosprechstunde']],
+            'appointmentType' => [
+                'coding' => [['system' => 'http://terminology.hl7.org/CodeSystem/v2-0276', 'code' => 'FOLLOWUP', 'display' => 'A follow up visit from a previous appointment']],
+            ],
+            'description' => $appointment->reason,
+            'start' => $appointment->starts_at->toIso8601String(),
+            'end' => $appointment->ends_at->toIso8601String(),
+            'minutesDuration' => $appointment->durationMinutes(),
+            'participant' => $participants,
+        ], fn ($value) => $value !== null);
     }
 
     /**

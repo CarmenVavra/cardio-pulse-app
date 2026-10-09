@@ -76,6 +76,16 @@ class Patient extends Model
     }
 
     /**
+     * Termine für Videosprechstunden.
+     *
+     * @return HasMany<Appointment, $this>
+     */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    /**
      * @return HasOne<Measurement, $this>
      */
     public function latestMeasurement(): HasOne

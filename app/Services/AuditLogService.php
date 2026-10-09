@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Alarm;
+use App\Models\Appointment;
 use App\Models\AuditLog;
 use App\Models\Call;
 use App\Models\Measurement;
@@ -93,6 +94,7 @@ class AuditLogService
                     ->morphWith([
                         Measurement::class => $patient,
                         Alarm::class => $patient,
+                        Appointment::class => $patient,
                         Call::class => $patient,
                         Message::class => $patient,
                         Medication::class => $patient,

@@ -2,6 +2,44 @@
     <div class="list-page">
         <h1>Anrufe</h1>
 
+        @if ($errors->appointment->any())
+            <div class="alert alert--error" role="alert">{{ $errors->appointment->first() }}</div>
+        @endif
+
+        <section aria-labelledby="appointments">
+            <h2 id="appointments" class="micro">Videosprechstunden · nächste 14 Tage</h2>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Termin</th><th>Patient</th><th class="hide-sm">Arzt</th><th class="hide-md">Anlass</th><th><span class="sr-only">Aktion</span></th></tr></thead>
+                    <tbody>
+                        @forelse ($appointments as $appointment)
+                            <tr @class(['is-due' => $appointment->canStart()])>
+                                <td class="nowrap"><b>{{ \App\Support\Format::day($appointment->starts_at) }}</b><br><span class="meta">{{ $appointment->durationMinutes() }} Min</span></td>
+                                <td><a href="{{ route('patients.show', $appointment->patient) }}#termine">{{ $appointment->patient->fullName() }}</a><br><span class="meta">{{ $appointment->patient->patient_number }}</span></td>
+                                <td class="hide-sm">
+                                    {{ $appointment->doctor?->shortName() ?? '—' }}
+                                    @if ($appointment->user_id === auth()->id()) <span class="meta">(Sie)</span> @endif
+                                </td>
+                                <td class="hide-md">{{ $appointment->reason ?? '—' }}</td>
+                                <td>
+                                    @if ($appointment->canStart())
+                                        <form method="POST" action="{{ route('appointments.start', $appointment) }}">
+                                            @csrf
+                                            <button type="submit" class="btn btn--primary btn--sm"><span class="btn__lead"><x-icon name="video" size="16" />Starten</span></button>
+                                        </form>
+                                    @else
+                                        <span class="meta">ab {{ $appointment->starts_at->copy()->subMinutes(\App\Models\Appointment::EARLY_START_MINUTES)->format('H:i') }}</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="5" class="meta">Keine Videosprechstunden geplant. Termine vereinbaren Sie in der Patientenansicht.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <section aria-labelledby="open-calls">
             <h2 id="open-calls" class="micro">Aktive Anrufe</h2>
             <div class="table-wrap">

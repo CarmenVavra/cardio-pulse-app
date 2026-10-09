@@ -15,7 +15,10 @@ use Illuminate\Support\Str;
  */
 class PatientService
 {
-    public function __construct(private readonly CallService $calls) {}
+    public function __construct(
+        private readonly CallService $calls,
+        private readonly AppointmentService $appointments,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data  Stammdaten
@@ -90,6 +93,7 @@ class PatientService
         DB::transaction(function () use ($patient, $by, $reason) {
             // Laufende oder klingelnde Anrufe beenden.
             $patient->calls()->open()->get()->each(fn (Call $call) => $this->calls->end($call));
+            $this->appointments->cancelAllFor($patient, $by);
 
             $openAlarms = $patient->alarms()->open()->count();
 

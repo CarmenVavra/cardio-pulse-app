@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Alarm;
+use App\Models\Appointment;
 use App\Models\AuditLog;
 use App\Models\Call;
 use App\Models\Measurement;
@@ -29,6 +30,7 @@ class AuditLogFormatter
         'measurement' => 'Messungen',
         'alarm' => 'Alarme',
         'call' => 'Anrufe',
+        'appointment' => 'Termine',
         'message' => 'Nachrichten',
         'medication' => 'Medikation',
         'monthly_report' => 'Monatsberichte',
@@ -69,6 +71,9 @@ class AuditLogFormatter
         'call.declined' => 'Anruf abgelehnt',
         'call.ended' => 'Anruf beendet',
         'call.note_saved' => 'Gesprächsnotiz gespeichert',
+        'appointment.scheduled' => 'Videosprechstunde vereinbart',
+        'appointment.cancelled' => 'Termin abgesagt',
+        'appointment.started' => 'Videosprechstunde gestartet',
         'message.sent' => 'Nachricht an Patient gesendet',
         'message.received' => 'Nachricht vom Patienten',
         'medication.created' => 'Medikament erfasst',
@@ -117,6 +122,9 @@ class AuditLogFormatter
         'reason' => 'Grund',
         'status' => 'Status',
         'app' => 'Zugang',
+        'starts_at' => 'Termin',
+        'minutes' => 'Dauer (Min)',
+        'by_patient' => 'Vom Patienten',
     ];
 
     /**
@@ -201,6 +209,7 @@ class AuditLogFormatter
             $subject instanceof Measurement => 'Messung '.$subject->reading().' · '.$this->patient($subject->patient),
             $subject instanceof Alarm => 'Alarm · '.$this->patient($subject->patient),
             $subject instanceof Call => 'Anruf · '.$this->patient($subject->patient),
+            $subject instanceof Appointment => 'Termin '.$subject->starts_at->format('d.m.Y H:i').' · '.$this->patient($subject->patient),
             $subject instanceof Message => 'Nachricht · '.$this->patient($subject->patient),
             $subject instanceof Medication => $subject->name.' · '.$this->patient($subject->patient),
             $subject instanceof MonthlyReport => 'Monatsbericht '.Format::monthName($subject->month).' '.$subject->month->year.' · '.$this->patient($subject->patient),

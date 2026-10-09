@@ -43,6 +43,29 @@
             </form>
         </section>
 
+        <section id="termine" aria-labelledby="appointments-title">
+            <h2 id="appointments-title" class="meta" style="font-weight:600;margin:4px 0 8px">Videosprechstunden</h2>
+            <div class="card">
+                @forelse ($appointments as $appointment)
+                    <div class="appointment-item">
+                        <div>
+                            <b>{{ $appointment->when() }}</b>
+                            <div class="meta">{{ $appointment->doctor?->displayName() ?? 'Ihr Behandlungsteam' }} ruft Sie zur Terminzeit per Video an. Öffnen Sie vorher die App und erlauben Sie Kamera und Mikrofon.</div>
+                        </div>
+                        @if ($appointment->canBeCancelledByPatient())
+                            <form method="POST" action="{{ route('patient.appointments.cancel', $appointment) }}"
+                                  data-confirm="Termin am {{ $appointment->when() }} wirklich absagen?">
+                                @csrf
+                                <button type="submit" class="btn btn--outline-red btn--block">Termin absagen</button>
+                            </form>
+                        @endif
+                    </div>
+                @empty
+                    <p class="meta appointment-item">Keine Videosprechstunde geplant. Ihr Behandlungsteam vereinbart Termine mit Ihnen.</p>
+                @endforelse
+            </div>
+        </section>
+
         <section id="nachrichten" aria-labelledby="messages-title">
             <h2 id="messages-title" class="meta" style="font-weight:600;margin:4px 0 8px">Nachrichten mit der Klinik</h2>
             <div class="card">

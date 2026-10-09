@@ -19,7 +19,8 @@ class DoctorController extends PatientAreaController
         $messages = $messageService->thread($patient);
 
         $messageService->markReadByPatient($patient);
+        $appointments = $patient->appointments()->upcoming()->with('doctor')->orderBy('starts_at')->get();
 
-        return view('patient.doctor', compact('patient', 'recentCalls', 'messages'));
+        return view('patient.doctor', compact('patient', 'recentCalls', 'messages', 'appointments'));
     }
 }

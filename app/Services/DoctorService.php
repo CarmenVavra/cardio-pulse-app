@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\UserRole;
+use App\Models\Appointment;
 use App\Models\AuditLog;
 use App\Models\Call;
 use App\Models\User;
@@ -71,6 +72,11 @@ class DoctorService
             }
 
             Call::query()->where('user_id', $doctor->id)->open()->get()->each(fn (Call $call) => $this->calls->end($call));
+
+            // Geplante Videosprechstunden übernimmt die Vertretung.
+            if ($replacement !== null) {
+                Appointment::query()->where('user_id', $doctor->id)->upcoming()->update(['user_id' => $replacement->id]);
+            }
 
             // Sitzungen und "Angemeldet bleiben" beenden.
             User::query()->whereKey($doctor->id)->update(['remember_token' => Str::random(60)]);

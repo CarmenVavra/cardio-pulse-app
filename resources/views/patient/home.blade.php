@@ -42,6 +42,17 @@
             </section>
         @endif
 
+        @if ($nextAppointment)
+            <a class="card card__pad appointment-card" href="{{ route('patient.doctor') }}#termine">
+                <span class="appointment-card__icon" aria-hidden="true"><x-icon name="video" size="22" /></span>
+                <span>
+                    <span class="meta">Nächste Videosprechstunde</span><br>
+                    <b>{{ $nextAppointment->when() }}</b><br>
+                    <span class="meta">{{ $nextAppointment->doctor?->displayName() }} ruft Sie in der App an.</span>
+                </span>
+            </a>
+        @endif
+
         <a class="btn btn--primary btn--lg btn--block btn--start" href="{{ route('patient.measurements.create') }}" style="font-size:17px;min-height:58px">
             <x-icon name="plus" size="22" stroke="2.6" />Blutdruck eintragen
         </a>
