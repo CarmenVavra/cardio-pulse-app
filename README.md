@@ -131,11 +131,18 @@ Validierungsmeldungen und E-Mails sind deutsch (`lang/de/validation.php`, `lang/
 
 „Demo: Upload simulieren" auf dem Board (`CARDIOPULSE_DEMO=false` zum Abschalten).
 
+## Offen bis zum Einsatz im Krankenhaus
+
+Diese zwei Punkte werden erst umgesetzt, wenn das Programm tatsächlich eingesetzt wird:
+
+1. **TURN-Server für die Videosprechstunde** – leitet Bild und Ton weiter, wenn keine direkte Verbindung möglich ist (strenge Krankenhaus- oder Firmen-Firewalls, manche Mobilfunknetze; ohne TURN klappt es in etwa 80–90 % der Fälle). Läuft nicht auf dem Webhosting, braucht einen eigenen kleinen Server (z. B. netcup-VPS, ca. 3–5 € im Monat, Standort Deutschland/Österreich) mit coturn und Zertifikat. In der App dann zeitlich begrenzte Zugangsdaten (coturn `use-auth-secret`) statt eines festen Passworts; die Einstellungen `CARDIOPULSE_TURN_*` sind schon vorhanden.
+2. **FHIR-Schnittstelle** – heute gibt es nur den FHIR-Export als Download. Für die Anbindung an das KIS: Lese-Schnittstelle (REST) für Patient, Blutdruck-Observations und Appointments mit Suche, Zugangsschlüssel pro angebundenem System (vom Admin verwaltet, jeder Zugriff protokolliert), Selbstbeschreibung unter `/fhir/metadata` und Prüfung gegen den FHIR-Standard. Die Details (wer holt bei wem ab, Patientennummern, Anmeldung z. B. SMART on FHIR / OAuth 2.0) richten sich nach dem System des Krankenhauses.
+
 ## Bewusste Vereinfachungen / offene Punkte
 
 - Echtzeit per **Polling** (5 s) statt WebSockets – Austausch gegen Laravel Reverb vorgesehen.
-- **Videosprechstunde (WebRTC):** Der Verbindungsaufbau läuft über die App (Polling, `call_signals`, verschlüsselt, nach dem Auflegen gelöscht); Bild und Ton gehen direkt zwischen den Browsern (DTLS-SRTP). Der Arzt-Browser bietet an, der Patienten-Browser antwortet; nach einem Neuladen verbindet sich das Gespräch selbst neu. STUN: `stun.nextcloud.com` (Deutschland). In sehr abgeschotteten Netzen (Firmen-WLAN, manche Mobilfunknetze) braucht es zusätzlich einen **TURN-Server** (`CARDIOPULSE_TURN_*`, z. B. coturn auf einem kleinen VPS) – ohne ihn zeigt die App nach 25 s den Hinweis, über die Telefonnummer zu telefonieren. Ohne Kamera-Freigabe sieht und hört man die Gegenseite trotzdem.
-- FHIR `Encounter` fehlt noch; der FHIR-Export ist ein Download, keine REST-API mit SMART on FHIR / OAuth 2.0.
+- **Videosprechstunde (WebRTC):** Der Verbindungsaufbau läuft über die App (Polling, `call_signals`, verschlüsselt, nach dem Auflegen gelöscht); Bild und Ton gehen direkt zwischen den Browsern (DTLS-SRTP). Der Arzt-Browser bietet an, der Patienten-Browser antwortet; nach einem Neuladen verbindet sich das Gespräch selbst neu. STUN: `stun.nextcloud.com` (Deutschland). In sehr abgeschotteten Netzen (Firmen-WLAN, manche Mobilfunknetze) braucht es zusätzlich einen **TURN-Server** (siehe „Offen bis zum Einsatz im Krankenhaus“) – ohne ihn zeigt die App nach 25 s den Hinweis, über die Telefonnummer zu telefonieren. Ohne Kamera-Freigabe sieht und hört man die Gegenseite trotzdem.
+- FHIR `Encounter` fehlt noch; der FHIR-Export ist ein Download, keine REST-API (siehe „Offen bis zum Einsatz im Krankenhaus“).
 - **Notfalltaste:** In der Web-App wird der Standort nur ermittelt, solange die App offen ist (Browser-Ortung mit Freigabe am Handy) – kein Hintergrund-Tracking, das ginge nur mit einer nativen App. Ebenso kann nur eine native App den Notruf ohne Tippen wählen.
 - Die **Privacy-Lock-PIN** lässt sich nicht per E-Mail zurücksetzen – ein Admin setzt sie unter „Ärzte“ neu.
 - Der Chat ist **kein Notfallkanal** – die App weist auf den Notruf hin (Standard **144**, Rettung Österreich; in Deutschland `CARDIOPULSE_EMERGENCY_NUMBER=112`).
