@@ -5,9 +5,10 @@ namespace App\Enums;
 /**
  * Ampel-Klassifizierung – identisch in Patienten-App und Krankenhaus.
  *
- * Auswertungsreihenfolge: Rot → Blau (zu niedrig) → Gelb-Orange → Grün.
- * Hinweis: Der Bereich 130–139 / 85–89 ist im Konzept nicht definiert und wird
- * gemäß Design-Handoff als Gelb-Orange gewertet (mit medizinischer Leitung abstimmen).
+ * Abgeleitet aus der ESC/ESH-Einteilung ({@see BloodPressureCategory}):
+ * Rot = Hypertonie Grad 3 / hypertensive Krise (≥ 180 oder ≥ 110 mmHg, löst Alarm aus),
+ * Blau = zu niedrig (< 90 oder < 60), Gelb-Orange = hoch-normal bis Grad 2 (≥ 130 oder ≥ 85),
+ * Grün = normal.
  */
 enum BloodPressureStatus: string
 {
@@ -19,12 +20,7 @@ enum BloodPressureStatus: string
 
     public static function classify(int $systolic, int $diastolic): self
     {
-        return match (true) {
-            $systolic >= 180 || $diastolic >= 120 => self::Red,
-            $systolic < 90 || $diastolic < 60 => self::Blue,
-            $systolic >= 130 || $diastolic >= 85 => self::Amber,
-            default => self::Green,
-        };
+        return BloodPressureCategory::classify($systolic, $diastolic)->status();
     }
 
     /**
@@ -61,7 +57,7 @@ enum BloodPressureStatus: string
     {
         return match ($this) {
             self::Red => 'Gefährlich hoch',
-            self::Amber => 'Zu hoch',
+            self::Amber => 'Erhöht',
             self::Green => 'Normal',
             self::Blue => 'Zu niedrig',
         };
@@ -136,21 +132,8 @@ enum BloodPressureStatus: string
     }
 
     /**
-     * Handlungsempfehlung für den Patienten (Ergebnis-Screen).
-     */
-    public function advice(): string
-    {
-        return match ($this) {
-            self::Red => 'Bei Brustschmerz, Atemnot, Sprach- oder Sehstörungen rufen Sie sofort den Notruf.',
-            self::Amber => 'Leicht erhöht. Ruhen Sie sich 5 Minuten aus und messen Sie dann erneut.',
-            self::Green => 'Ihr Blutdruck liegt im Normalbereich. Weiter so – messen Sie wie gewohnt.',
-            self::Blue => 'Ihr Blutdruck ist niedrig. Setzen oder legen Sie sich hin und trinken Sie ein Glas Wasser. Bei Bewusstseinsstörung sofort 112 wählen.',
-        };
-    }
-
-    /**
      * Position der Markierung auf der 4-teiligen Skala (0–100 %).
-     * Segmente: Zu niedrig (1fr) · Normal (1.4fr) · Zu hoch (1.4fr) · Gefährlich (1fr).
+     * Segmente: Zu niedrig (1fr) · Normal (1.4fr) · Erhöht (1.4fr) · Gefährlich (1fr).
      */
     public function scalePosition(int $systolic): float
     {

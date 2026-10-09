@@ -28,7 +28,7 @@
         </form>
 
         <p class="meta"><a href="{{ route('patient.password.request') }}">Passwort vergessen?</a></p>
-        <p class="meta push-down">Im Notfall immer zuerst <b class="emergency-number">112</b> wählen.</p>
+        <p class="meta push-down">Im Notfall immer zuerst <b class="emergency-number">{{ config('cardiopulse.emergency_number') }}</b> wählen.</p>
         <p class="meta"><a href="{{ route('login') }}">Zum Krankenhaus-Login</a></p>
     </div>
 </x-layouts.patient>

@@ -56,7 +56,7 @@
                                   aria-describedby="message-hint{{ $errors->has('body') ? ' message-error' : '' }}"
                                   @error('body') aria-invalid="true" @enderror>{{ old('body') }}</textarea>
                         @error('body')<div class="field-error" id="message-error" role="alert">{{ $message }}</div>@enderror
-                        <p class="meta" id="message-hint">Antwort in der Regel innerhalb eines Werktags. Nicht für Notfälle – dann <b>112</b> wählen.</p>
+                        <p class="meta" id="message-hint">Antwort in der Regel innerhalb eines Werktags. Nicht für Notfälle – dann <b>{{ config('cardiopulse.emergency_number') }}</b> wählen.</p>
                     </div>
                     <button type="submit" class="btn btn--navy btn--lg btn--block">Senden <span aria-hidden="true">→</span></button>
                 </form>
@@ -81,6 +81,6 @@
             </div>
         </section>
 
-        <p class="meta push-down">Im Notfall immer zuerst <b class="emergency-number">112</b> wählen.</p>
+        <p class="meta push-down">Im Notfall immer zuerst <b class="emergency-number">{{ config('cardiopulse.emergency_number') }}</b> wählen.</p>
     </div>
 </x-layouts.patient>

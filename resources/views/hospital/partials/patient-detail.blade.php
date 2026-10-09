@@ -14,7 +14,7 @@
         <div>
             @if ($latest)
                 <x-status-tag :status="$latest->status"
-                    :label="$latest->status->label().($alarm ? ($alarm->isOpen() ? ' · Alarm offen' : ' · quittiert '.$alarm->acknowledged_at?->format('H:i')) : '')" />
+                    :label="$latest->category()->label().($alarm ? ($alarm->isOpen() ? ' · Alarm offen' : ' · quittiert '.$alarm->acknowledged_at?->format('H:i')) : '')" />
             @endif
             <h1 class="detail__name" id="patient-name">{{ $patient->fullName() }}</h1>
             <p class="meta">

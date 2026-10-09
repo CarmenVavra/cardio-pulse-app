@@ -57,7 +57,19 @@ Demo-Daten neu erzeugen: `php artisan migrate:fresh --seed`
 
 ## Funktionen
 
-**Ampel** (identisch in App und Krankenhaus, `app/Enums/BloodPressureStatus.php`): Rot ≥ 180 / ≥ 120 · Blau (zu niedrig) < 90 / < 60 · Gelb-Orange ≥ 130 / ≥ 85 · Grün sonst (mmHg, systolisch / diastolisch).
+**Blutdruck-Einteilung nach ESC/ESH** (Leitlinien der European Society of Cardiology / Hypertension, wie in Österreich üblich; `app/Enums/BloodPressureCategory.php`). Systolisch und diastolisch werden einzeln eingestuft, es zählt der höhere Bereich:
+
+| Bereich | Systolisch | | Diastolisch | Ampel |
+|---|---|---|---|---|
+| Hypertensive Krise | > 180 | oder | > 120 | Rot (Alarm) |
+| Hypertonie Grad 3 (schwer) | ≥ 180 | oder | ≥ 110 | Rot (Alarm) |
+| Hypertonie Grad 2 (mäßig) | 160–179 | oder | 100–109 | Gelb-Orange |
+| Hypertonie Grad 1 (mild) | 140–159 | oder | 90–99 | Gelb-Orange |
+| Hoch-normal (beobachten) | 130–139 | oder | 85–89 | Gelb-Orange |
+| Normal | < 130 | und | < 85 | Grün |
+| Zu niedrig (nicht Teil der ESC-Tabelle) | < 90 | oder | < 60 | Blau |
+
+Die Ampelfarbe (`app/Enums/BloodPressureStatus.php`) ist in App und Krankenhaus identisch; die Patienten-App, Berichte und Verlauf zeigen zusätzlich den genauen Bereich mit passender Empfehlung.
 
 ### Krankenhaus
 
@@ -79,7 +91,7 @@ Demo-Daten neu erzeugen: `php artisan migrate:fresh --seed`
 | Screen | Funktion |
 |---|---|
 | **Start** (M1) | Letzte Messung, Messungen von heute, Fortschritt Monatsbericht, Medikation, ungelesene Nachrichten |
-| **Messen** (M2–M4) | Erfassung per Numpad mit Kontext (Ruhe, Medikation, Symptome), Ergebnis in Ampelfarbe, Notfall-Interruption mit Notruf 112 |
+| **Messen** (M2–M4) | Erfassung per Numpad mit Kontext (Ruhe, Medikation, Symptome), Ergebnis in Ampelfarbe, Notfall-Interruption mit Notruf (`CARDIOPULSE_EMERGENCY_NUMBER`, Standard 144) |
 | **Monat** (M5) | Monatskalender, Versand an das Krankenhaus (erneut senden möglich), PDF für den Hausarzt |
 | **Arzt** (M6/M7) | Anruf an Arzt oder Zentrale, eingehende Anrufe, **Chat mit der Klinik** (Nachrichten lesen und beantworten, Lesebestätigung) |
 | **Medikation** | Eigene Medikation erfassen, bearbeiten, löschen |
@@ -121,10 +133,10 @@ Validierungsmeldungen und E-Mails sind deutsch (`lang/de/validation.php`, `lang/
 - Anrufe: Signalisierung und Status sind umgesetzt, der **Sprachkanal (WebRTC/VoIP)** ist nicht angebunden.
 - **Video-Sprechstunden** mit Terminvergabe (FHIR `Appointment`) und FHIR `Encounter` fehlen noch; der FHIR-Export ist ein Download, keine REST-API mit SMART on FHIR / OAuth 2.0.
 - Die **Privacy-Lock-PIN** lässt sich nicht per E-Mail zurücksetzen – ein Admin setzt sie unter „Ärzte“ neu.
-- Der Chat ist **kein Notfallkanal** – die App weist auf 112 hin.
+- Der Chat ist **kein Notfallkanal** – die App weist auf den Notruf hin (Standard **144**, Rettung Österreich; in Deutschland `CARDIOPULSE_EMERGENCY_NUMBER=112`).
 - Bluetooth-Import und Foto-Scan (OCR) sind nur in nativen Apps sinnvoll – in der Web-App erscheint ein Hinweis.
 - Hypotonie wird **blau** dargestellt („Blue Ice“ laut Konzept, für WCAG-AA-Kontrast mit weißer Schrift leicht abgedunkelt: `#0277BD` statt `#0288D1`). Das Mockup sah weiß vor – das war zu unauffällig.
-- Bereich 130–139 / 85–89 ist im Konzept undefiniert und wird als Gelb-Orange gewertet – **mit medizinischer Leitung abstimmen**.
+- Die Grenzwerte folgen den ESC/ESH-Leitlinien (siehe oben). Rot beginnt bei Hypertonie Grad 3 (≥ 180 / ≥ 110) – das Konzept sah ≥ 180 / ≥ 120 vor; bestehende Messungen mit diastolisch 110–119 wurden umgefärbt (ohne nachträgliche Alarme).
 - Mikro-Labels sind 12 px statt 11 px (Mindestschriftgröße laut CLAUDE.md).
 
 ## Produktivbetrieb (netcup-Webhosting)

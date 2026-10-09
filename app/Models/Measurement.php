@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BloodPressureCategory;
 use App\Enums\BloodPressureStatus;
 use Database\Factories\MeasurementFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -71,6 +72,14 @@ class Measurement extends Model
     public function reading(): string
     {
         return $this->systolic.'/'.$this->diastolic;
+    }
+
+    /**
+     * Einteilung nach ESC/ESH, z. B. „Hypertonie Grad 1“.
+     */
+    public function category(): BloodPressureCategory
+    {
+        return BloodPressureCategory::classify($this->systolic, $this->diastolic);
     }
 
     /**

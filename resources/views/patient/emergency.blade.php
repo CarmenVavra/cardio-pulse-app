@@ -3,9 +3,10 @@
         <h1 class="emergency__kicker" id="emergency-title">GEFÄHRLICH HOHER WERT</h1>
         <div class="emergency__bp" aria-label="{{ $measurement->systolic }} zu {{ $measurement->diastolic }} mmHg">{{ $measurement->reading() }}</div>
         <div>mmHg · Puls {{ $measurement->pulse ?? '—' }}@if ($measurement->symptoms) · {{ $measurement->symptomLabels() }}@endif</div>
-        <p class="emergency__advice" id="emergency-advice">{{ $measurement->status->advice() }}</p>
+        <div class="emergency__category">{{ $measurement->category()->label() }} · {{ $measurement->category()->description() }}</div>
+        <p class="emergency__advice" id="emergency-advice">{{ $measurement->category()->advice() }}</p>
 
-        <a class="btn btn--white btn--xl btn--block btn--start" href="tel:112"><x-icon name="phone" size="28" stroke="2.4" />Notruf 112</a>
+        <a class="btn btn--white btn--xl btn--block btn--start" href="tel:{{ config('cardiopulse.emergency_number') }}"><x-icon name="phone" size="28" stroke="2.4" />Notruf {{ config('cardiopulse.emergency_number') }}</a>
 
         <form method="POST" action="{{ route('patient.calls.store') }}">
             @csrf

@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
- * Chat zwischen Klinik und Patient (keine Notfall-Kommunikation – dafür 112 bzw. Anruf).
+ * Chat zwischen Klinik und Patient (keine Notfall-Kommunikation – dafür Notruf bzw. Anruf).
  */
 class MessageService
 {

@@ -21,7 +21,8 @@ class BloodPressureStatusTest extends TestCase
             'blau diastolisch' => [110, 59, BloodPressureStatus::Blue],
             'gelb systolisch' => [130, 80, BloodPressureStatus::Amber],
             'gelb diastolisch' => [125, 85, BloodPressureStatus::Amber],
-            'gelb knapp unter rot' => [179, 119, BloodPressureStatus::Amber],
+            'rot ab Grad 3 diastolisch' => [150, 110, BloodPressureStatus::Red],
+            'gelb knapp unter rot' => [179, 109, BloodPressureStatus::Amber],
             'grün' => [129, 84, BloodPressureStatus::Green],
             'grün untere Grenze' => [90, 60, BloodPressureStatus::Green],
         ];

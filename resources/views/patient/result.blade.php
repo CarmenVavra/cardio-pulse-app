@@ -1,11 +1,13 @@
 @php
     $status = $measurement->status;
+    $category = $measurement->category();
 @endphp
 <x-layouts.patient title="Ihr Ergebnis">
     <x-slot:header>
         <header class="result-head st-{{ $status->value }}">
             <div class="result-head__kicker">IHR ERGEBNIS · {{ $measurement->measured_at->format('H:i') }}</div>
-            <h1 class="result-head__status">{{ $status->label() }}</h1>
+            <h1 class="result-head__status">{{ $category->label() }}</h1>
+            <div class="result-head__category">{{ $category->description() }}</div>
             <div class="result-head__bp" aria-label="{{ $measurement->systolic }} zu {{ $measurement->diastolic }} mmHg">{{ $measurement->reading() }}</div>
             <div class="result-head__meta">mmHg · Puls {{ $measurement->pulse ?? '—' }}</div>
         </header>
@@ -13,17 +15,17 @@
 
     <div class="p-content" style="gap:18px;padding-top:20px">
         <div>
-            <div class="scale" role="img" aria-label="Einordnung: {{ $status->label() }}">
+            <div class="scale" role="img" aria-label="Einordnung: {{ $category->label() }}">
                 <span style="background:var(--blue)"></span>
                 <span style="background:var(--green)"></span>
                 <span style="background:var(--amber)"></span>
                 <span style="background:var(--red)"></span>
                 <span class="scale__marker" style="left:{{ $status->scalePosition($measurement->systolic) }}%"></span>
             </div>
-            <div class="scale-labels" aria-hidden="true"><span>Zu niedrig</span><span>Normal</span><span>Zu hoch</span><span>Gefährlich</span></div>
+            <div class="scale-labels" aria-hidden="true"><span>Zu niedrig</span><span>Normal</span><span>Erhöht</span><span>Gefährlich</span></div>
         </div>
 
-        <p class="advice">{{ $status->advice() }}</p>
+        <p class="advice">{{ $category->advice() }}</p>
 
         <div class="saved-note" role="status">
             <x-icon name="check" size="22" stroke="2.6" />

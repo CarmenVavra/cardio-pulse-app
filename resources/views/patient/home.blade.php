@@ -30,7 +30,7 @@
             <section class="last-card st-{{ $latest->status->value }}" aria-label="Letzte Messung">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
                     <span class="meta" style="font-weight:600">Letzte Messung · {{ $latest->measured_at->isToday() ? $latest->measured_at->format('H:i') : \App\Support\Format::day($latest->measured_at) }}</span>
-                    <span class="tag tag--solid st-{{ $latest->status->value }}">{{ $latest->status->label() }}</span>
+                    <span class="tag tag--solid st-{{ $latest->status->value }}">{{ $latest->category()->label() }}</span>
                 </div>
                 <div class="last-card__bp">{{ $latest->reading() }}</div>
                 <div>mmHg · Puls {{ $latest->pulse ?? '—' }}</div>

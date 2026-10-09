@@ -42,7 +42,7 @@
                     <td>{{ $measurement->measured_at->format('d.m. H:i') }}</td>
                     <td class="bp">{{ $measurement->reading() }}</td>
                     <td>{{ $measurement->pulse ?? '—' }}</td>
-                    <td>{{ $measurement->status->label() }}</td>
+                    <td>{{ $measurement->category()->label() }}</td>
                     <td>{{ $measurement->symptomLabels() }}</td>
                 </tr>
             @endforeach

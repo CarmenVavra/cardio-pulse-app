@@ -58,7 +58,7 @@ class TrendChart
             'x' => $x($m->measured_at),
             'y' => $this->y($m->systolic),
             'status' => $m->status->value,
-            'label' => $m->measured_at->format('d.m. H:i').' · '.$m->reading().' mmHg · '.$m->status->label(),
+            'label' => $m->measured_at->format('d.m. H:i').' · '.$m->reading().' mmHg · '.$m->category()->label(),
         ])->all();
 
         $ticks = [];

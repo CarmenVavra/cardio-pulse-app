@@ -54,7 +54,8 @@ class PatientMeasurementTest extends TestCase
 
         $this->get(route('patient.measurements.show', $measurement))
             ->assertOk()
-            ->assertSee('Zu hoch')
+            ->assertSee('Hoch-normal')
+            ->assertSee('Vorfeld des Bluthochdrucks')
             ->assertSee('136/86')
             ->assertSee('Gespeichert &amp; ans Krankenhaus übertragen', false);
     }
@@ -76,8 +77,9 @@ class PatientMeasurementTest extends TestCase
         $this->get(route('patient.measurements.show', $measurement))
             ->assertOk()
             ->assertSee('GEFÄHRLICH HOHER WERT')
-            ->assertSee('Notruf 112')
-            ->assertSee('tel:112')
+            ->assertSee('Hypertensive Krise')
+            ->assertSee('Notruf 144')
+            ->assertSee('tel:144')
             ->assertSee('Das Krankenhaus wurde sofort benachrichtigt');
 
         $this->assertDatabaseHas('alarms', ['measurement_id' => $measurement->id]);

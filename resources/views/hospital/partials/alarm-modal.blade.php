@@ -56,7 +56,7 @@
     </form>
 
     <div class="alarm-modal__foot">
-        Patient ist zu Hause – bei Bedarf Rettungsdienst (112) an die Wohnadresse schicken. Quittierung wird protokolliert.
+        Patient ist zu Hause – bei Bedarf Rettungsdienst ({{ config('cardiopulse.emergency_number') }}) an die Wohnadresse schicken. Quittierung wird protokolliert.
         @if ($more > 0) <b>Weitere offene Alarme: {{ $more }}</b> @endif
         <button type="button" class="link-button" data-minimize-alarm>Board anzeigen – Alarm und Signalton bleiben aktiv</button>
     </div>

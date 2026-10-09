@@ -24,6 +24,6 @@
             ]" />
         </section>
 
-        <p class="meta push-down">Im Notfall immer zuerst <b class="emergency-number">112</b> wählen.</p>
+        <p class="meta push-down">Im Notfall immer zuerst <b class="emergency-number">{{ config('cardiopulse.emergency_number') }}</b> wählen.</p>
     </div>
 </x-layouts.patient>

@@ -50,6 +50,11 @@ return [
     'trusted_proxies' => env('TRUSTED_PROXIES'),
 
     /*
+     | Notrufnummer in Patienten-App und Alarm (Österreich: 144 Rettung, Deutschland: 112).
+     */
+    'emergency_number' => env('CARDIOPULSE_EMERGENCY_NUMBER', '144'),
+
+    /*
      | Zwei-Faktor-Anmeldung für Ärzte: Bei true muss jeder Arzt sie nach der Anmeldung
      | einrichten, bevor er die App nutzen kann (empfohlen im Produktivbetrieb).
      */
