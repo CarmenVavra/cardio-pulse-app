@@ -1,5 +1,6 @@
 import { getJson, initCallScreen, initCommon, storage } from './common';
 import { initInstallApp } from './install-app';
+import { initPush } from './push';
 import { initSos } from './sos';
 import { initVideoCall } from './video-call';
 
@@ -12,6 +13,7 @@ initCallScreen();
 initVideoCall();
 initSos();
 initInstallApp();
+initPush();
 
 /* ------------------------------------------------------------------ Eingehender Anruf (M7) */
 

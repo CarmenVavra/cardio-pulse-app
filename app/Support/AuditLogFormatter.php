@@ -56,6 +56,8 @@ class AuditLogFormatter
         'account.two_factor_enabled' => 'Zwei-Faktor-Anmeldung eingerichtet',
         'account.two_factor_disabled' => 'Zwei-Faktor-Anmeldung abgeschaltet',
         'account.recovery_codes_regenerated' => 'Neue Wiederherstellungscodes',
+        'account.push_enabled' => 'Push-Benachrichtigungen eingeschaltet',
+        'account.push_disabled' => 'Push-Benachrichtigungen ausgeschaltet',
         'doctor.created' => 'Arzt angelegt',
         'doctor.updated' => 'Arzt geändert',
         'doctor.deleted' => 'Arzt gelöscht',

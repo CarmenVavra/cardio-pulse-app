@@ -19,6 +19,7 @@
         </section>
 
         <x-install-app />
+        <x-push-settings />
 
         <form method="POST" action="{{ route('patient.account.location') }}" class="card card__pad stack" id="standort" aria-labelledby="location-title">
             @csrf

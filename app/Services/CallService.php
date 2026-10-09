@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\Call;
 use App\Models\Patient;
 use App\Models\User;
+use App\Notifications\IncomingCallNotification;
 
 /**
  * Anruf-Lebenszyklus Arzt ↔ Patient. Bild und Ton der Videosprechstunde laufen per WebRTC
@@ -33,6 +34,9 @@ class CallService
         ]);
 
         AuditLog::record('call.started', $call, ['direction' => CallDirection::ToPatient->value], $doctor);
+
+        // Klingeln auch bei geschlossener App (Push aufs Handy, falls eingeschaltet).
+        $patient->loadMissing('user')->user?->notify(new IncomingCallNotification($call->setRelation('user', $doctor)));
 
         return $call;
     }

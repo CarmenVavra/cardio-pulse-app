@@ -2841,6 +2841,34 @@ a.user-chip[aria-current="page"] .user-chip__name {
     align-self: flex-start;
 }
 
+/* Push-Benachrichtigungen */
+
+.push-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-left: 6px solid var(--cyan);
+}
+
+.push-settings__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 17px;
+}
+
+.push-settings__state {
+    font-weight: 700;
+}
+
+.push-settings__state:empty {
+    display: none;
+}
+
+.push-settings__later {
+    align-self: flex-start;
+}
+
 .location-state {
     font-weight: 700;
     color: var(--muted);

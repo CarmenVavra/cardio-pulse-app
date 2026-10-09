@@ -32,6 +32,7 @@ use App\Http\Controllers\Patient\MeasurementController;
 use App\Http\Controllers\Patient\MedicationController as PatientMedicationController;
 use App\Http\Controllers\Patient\MessageController as PatientMessageController;
 use App\Http\Controllers\Patient\MonthController;
+use App\Http\Controllers\Patient\PushSubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
@@ -175,6 +176,8 @@ Route::prefix('app')->name('patient.')->middleware(['auth', 'role:patient'])->gr
     Route::get('/konto', [PatientAccountController::class, 'edit'])->name('account.edit');
     Route::put('/konto/passwort', [PatientAccountController::class, 'updatePassword'])->middleware('throttle:6,1')->name('account.password');
     Route::put('/konto/standort', [PatientAccountController::class, 'updateLocationConsent'])->name('account.location');
+    Route::post('/push-abo', [PushSubscriptionController::class, 'store'])->middleware('throttle:20,1')->name('push.store');
+    Route::delete('/push-abo', [PushSubscriptionController::class, 'destroy'])->middleware('throttle:20,1')->name('push.destroy');
 
     Route::get('/notfall', [EmergencyController::class, 'show'])->name('sos');
     Route::post('/notfall', [EmergencyController::class, 'store'])->middleware('throttle:20,1')->name('sos.store');

@@ -4,17 +4,20 @@ namespace App\Notifications;
 
 use App\Models\Appointment;
 use App\Models\User;
+use App\Notifications\Channels\WebPushChannel;
+use App\Notifications\Contracts\SendsPush;
+use App\Support\PushMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * E-Mail an den Patienten: neuer oder abgesagter Termin für eine Videosprechstunde
- * sowie die Erinnerung kurz vor Beginn.
+ * E-Mail (und, falls eingeschaltet, Push aufs Handy) an den Patienten: neuer oder
+ * abgesagter Termin für eine Videosprechstunde sowie die Erinnerung kurz vor Beginn.
  *
  * Sofort gesendet (kein Queue-Worker auf dem Webhosting). Keine Diagnosen oder
- * Messwerte in der E-Mail – nur Zeitpunkt, Arzt und der Hinweis auf die App.
+ * Messwerte – nur Zeitpunkt, Arzt und der Hinweis auf die App.
  */
-class AppointmentNotification extends Notification
+class AppointmentNotification extends Notification implements SendsPush
 {
     public const SCHEDULED = 'scheduled';
 
@@ -32,7 +35,28 @@ class AppointmentNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return WebPushChannel::availableFor($notifiable) ? ['mail', WebPushChannel::class] : ['mail'];
+    }
+
+    public function toWebPush(User $notifiable): PushMessage
+    {
+        $time = $this->appointment->starts_at->format('H:i');
+        $day = $this->appointment->starts_at->locale('de')->translatedFormat('D, d.m.');
+
+        [$title, $body] = match ($this->kind) {
+            self::REMINDER => ['Videosprechstunde heute um '.$time.' Uhr', 'Bitte öffnen Sie CardioPulse kurz vorher – Ihr Arzt ruft Sie an.'],
+            self::CANCELLED => ['Termin abgesagt', 'Ihre Videosprechstunde am '.$day.' um '.$time.' Uhr findet nicht statt.'],
+            default => ['Neuer Termin: Videosprechstunde', $day.' um '.$time.' Uhr – Details in CardioPulse.'],
+        };
+
+        return new PushMessage(
+            title: $title,
+            body: $body,
+            url: route('patient.doctor').'#termine',
+            tag: 'appointment-'.$this->appointment->id,
+            ttl: $this->kind === self::REMINDER ? 3600 : 86400,
+            urgency: $this->kind === self::REMINDER ? 'high' : 'normal',
+        );
     }
 
     /**

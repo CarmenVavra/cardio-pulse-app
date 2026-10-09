@@ -58,6 +58,7 @@
         </a>
 
         <x-install-app dismissible />
+        <x-push-settings dismissible />
 
         <section class="card" aria-labelledby="today-title">
             <div class="list-head">

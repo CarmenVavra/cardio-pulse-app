@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Message;
 use App\Models\Patient;
 use App\Models\User;
+use App\Notifications\ClinicMessageNotification;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
@@ -24,6 +25,8 @@ class MessageService
         ]);
 
         AuditLog::record('message.sent', $message, ['patient_id' => $patient->id]);
+
+        $patient->loadMissing('user')->user?->notify(new ClinicMessageNotification);
 
         return $message;
     }

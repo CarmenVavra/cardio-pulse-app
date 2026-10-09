@@ -75,6 +75,25 @@ return [
     'appointment_reminder_minutes' => (int) env('CARDIOPULSE_REMINDER_MINUTES', 60),
 
     /*
+     | Push-Benachrichtigungen der Patienten-App (Web Push, VAPID). Schlüssel einmalig mit
+     | `php artisan cardiopulse:vapid-keys --write` erzeugen – nicht mehr ändern, sonst
+     | müssen alle Patienten die Benachrichtigungen neu einschalten. Ohne Schlüssel ist
+     | die Funktion ausgeblendet.
+     */
+    'push' => [
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+        'subject' => env('VAPID_SUBJECT', 'mailto:'.env('MAIL_FROM_ADDRESS', 'noreply@example.com')),
+        // Nur echte Push-Dienste der Browser (Schutz davor, dass der Server beliebige Adressen aufruft).
+        'allowed_hosts' => [
+            'fcm.googleapis.com',
+            'updates.push.services.mozilla.com',
+            'push.apple.com',
+            'notify.windows.com',
+        ],
+    ],
+
+    /*
      | Zwei-Faktor-Anmeldung für Ärzte: Bei true muss jeder Arzt sie nach der Anmeldung
      | einrichten, bevor er die App nutzen kann (empfohlen im Produktivbetrieb).
      */

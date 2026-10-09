@@ -98,6 +98,16 @@ class User extends Authenticatable
         return $this->hasMany(Patient::class, 'doctor_id');
     }
 
+    /**
+     * Geräte, auf denen Push-Benachrichtigungen eingeschaltet sind.
+     *
+     * @return HasMany<PushSubscription, $this>
+     */
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
     public function isStaff(): bool
     {
         return $this->role === UserRole::Staff;

@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Services\PushService;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
@@ -13,6 +15,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -46,6 +49,12 @@ class AppServiceProvider extends ServiceProvider
         if (is_string($proxies) && $proxies !== '') {
             TrustProxies::at($proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
         }
+
+        // Push-Benachrichtigungen: öffentlicher Schlüssel für den Browser der Patienten-App (null = ausgeschaltet).
+        View::composer(['components.layouts.patient', 'components.push-settings'], function (ViewContract $view) {
+            $push = $this->app->make(PushService::class);
+            $view->with('pushPublicKey', $push->enabled() ? $push->publicKey() : null);
+        });
 
         // Ärzteverwaltung nur für Admins.
         Gate::define('manage-doctors', fn (User $user) => $user->isAdmin());

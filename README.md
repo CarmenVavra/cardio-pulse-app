@@ -93,6 +93,7 @@ Die Ampelfarbe (`app/Enums/BloodPressureStatus.php`) ist in App und Krankenhaus 
 | Screen | Funktion |
 |---|---|
 | **Als App installieren** | Die Patienten-App ist eine installierbare Web-App (PWA): eigenes Symbol am Startbildschirm, Vollbild ohne Browser-Leiste, angemeldet bleiben. Android/Chrome: Knopf „App installieren“; iPhone: Safari → Teilen → „Zum Home-Bildschirm“ (Anleitung erscheint in der App, auf der Startseite ausblendbar, immer unter „Mein Konto“). Ohne Internet erscheint eine Hinweisseite mit der Notrufnummer. Der Service Worker (`public/app-sw.js`) speichert bewusst nur diese Offline-Seite – keine Gesundheitsdaten |
+| **Push-Benachrichtigungen** (Mein Konto, Hinweis auf der Startseite) | Das Handy meldet sich auch bei geschlossener App: Arzt ruft an (öffnet direkt das Gespräch, wird nach 60 s nicht mehr zugestellt), neue Nachricht vom Behandlungsteam, Termin vereinbart/abgesagt, Erinnerung vor der Videosprechstunde. Auf dem Sperrbildschirm nie Gesundheitsdaten oder Nachrichtentexte. Web Push mit VAPID, Ende-zu-Ende verschlüsselt pro Gerät; nur echte Push-Dienste (Google, Apple, Mozilla, Microsoft) werden angenommen. iPhone ab iOS 16.4 und nur in der installierten App |
 | **Start** (M1) | Letzte Messung, Messungen von heute, Fortschritt Monatsbericht, Medikation, ungelesene Nachrichten |
 | **Notfalltaste** (rote Leiste „Notfall · SOS“ oben auf jeder Seite) | Taste **2 Sekunden gedrückt halten**, danach 5 Sekunden „Abbrechen“ möglich – dann wird das Krankenhaus alarmiert; der Patient tippt auf „Notruf 144 anrufen“ (ein Browser darf nicht selbst wählen). Mit Einwilligung wird der Standort einmalig ermittelt und mitgeschickt (keine laufende Ortung, verschlüsselt gespeichert, beim Quittieren gelöscht; das Krankenhaus sieht Koordinaten und OpenStreetMap-Link). Mehrfaches Drücken erzeugt keinen zweiten Alarm. Der Patient sieht, welcher Arzt sich kümmert, und kann „Fehlalarm“ melden (der Alarm bleibt bis zur Quittierung offen) |
 | **Messen** (M2–M4) | Erfassung per Numpad mit Kontext (Ruhe, Medikation, Symptome), Ergebnis in Ampelfarbe, Notfall-Interruption mit Notruf (`CARDIOPULSE_EMERGENCY_NUMBER`, Standard 144) |
@@ -144,7 +145,7 @@ Diese zwei Punkte werden erst umgesetzt, wenn das Programm tatsächlich eingeset
 - Echtzeit per **Polling** (5 s) statt WebSockets – Austausch gegen Laravel Reverb vorgesehen.
 - **Videosprechstunde (WebRTC):** Der Verbindungsaufbau läuft über die App (Polling, `call_signals`, verschlüsselt, nach dem Auflegen gelöscht); Bild und Ton gehen direkt zwischen den Browsern (DTLS-SRTP). Der Arzt-Browser bietet an, der Patienten-Browser antwortet; nach einem Neuladen verbindet sich das Gespräch selbst neu. STUN: `stun.nextcloud.com` (Deutschland). In sehr abgeschotteten Netzen (Firmen-WLAN, manche Mobilfunknetze) braucht es zusätzlich einen **TURN-Server** (siehe „Offen bis zum Einsatz im Krankenhaus“) – ohne ihn zeigt die App nach 25 s den Hinweis, über die Telefonnummer zu telefonieren. Ohne Kamera-Freigabe sieht und hört man die Gegenseite trotzdem.
 - FHIR `Encounter` fehlt noch; der FHIR-Export ist ein Download, keine REST-API (siehe „Offen bis zum Einsatz im Krankenhaus“).
-- **Installierte App:** Eingehende Anrufe erreichen den Patienten nur, solange die App geöffnet ist – dafür braucht es Push-Benachrichtigungen (nächster Schritt; iPhone ab iOS 16.4 und nur als installierte App). Das App-Symbol wird aus `resources/icons/app-icon.svg` erzeugt (`public/app-icons/` – nicht `icons/`: diesen Pfad belegt Apache selbst).
+- **Installierte App:** Ohne eingeschaltete Push-Benachrichtigungen erreichen Anrufe den Patienten nur, solange die App geöffnet ist. Push wird sofort beim Anruf/der Nachricht verschickt (kein Queue-Worker), mit 5 s Zeitgrenze – ein nicht erreichbarer Push-Dienst hält nichts auf. Das App-Symbol wird aus `resources/icons/app-icon.svg` erzeugt (`public/app-icons/` – nicht `icons/`: diesen Pfad belegt Apache selbst).
 - **Notfalltaste:** In der Web-App wird der Standort nur ermittelt, solange die App offen ist (Browser-Ortung mit Freigabe am Handy) – kein Hintergrund-Tracking, das ginge nur mit einer nativen App. Ebenso kann nur eine native App den Notruf ohne Tippen wählen.
 - Die **Privacy-Lock-PIN** lässt sich nicht per E-Mail zurücksetzen – ein Admin setzt sie unter „Ärzte“ neu.
 - Der Chat ist **kein Notfallkanal** – die App weist auf den Notruf hin (Standard **144**, Rettung Österreich; in Deutschland `CARDIOPULSE_EMERGENCY_NUMBER=112`).
@@ -238,6 +239,16 @@ Auf dem Server bleiben die neuesten 14 Schnappschüsse in `storage/app/backups/`
 **Wiederherstellen:** Archiv entpacken, die `.sqlite`-Datei als `database/database.sqlite` und die `.env` auf den Server kopieren, dann `./deploy.sh`.
 
 Die Sicherungen enthalten Gesundheitsdaten – verschlüsselt aufbewahren (z. B. BitLocker-USB-Stick), nicht per E-Mail versenden.
+
+### Push-Benachrichtigungen einschalten
+
+Einmalig auf dem Server (erzeugt das Schlüsselpaar und trägt es in die `.env` ein):
+
+```bash
+cd ~/cardio-pulse && php artisan cardiopulse:vapid-keys --write
+```
+
+Danach erscheint in der Patienten-App unter „Mein Konto“ der Knopf „Benachrichtigungen einschalten“. Die Schlüssel **nicht mehr ändern** (`--force` nur im Notfall) – sonst müssen alle Patienten die Benachrichtigungen neu einschalten. Der private Schlüssel gehört wie das Mail-Passwort nur in die `.env` (wird von `backup.bat` mitgesichert).
 
 ### Geplante Aufgabe (Terminerinnerung, nächtliche Sicherung)
 
