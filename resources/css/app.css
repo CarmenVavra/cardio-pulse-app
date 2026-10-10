@@ -2203,6 +2203,12 @@ a.user-chip[aria-current="page"] .user-chip__name {
     flex-direction: column;
 }
 
+/* Ohne Tab-Leiste: Inhalt nicht hinter der Navigationsleiste des Handys verstecken
+   (viewport-fit=cover, installierte App). */
+.p-app--no-tabs .p-main {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
 .p-content {
     flex: 1;
     display: flex;

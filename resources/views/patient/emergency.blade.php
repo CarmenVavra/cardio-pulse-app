@@ -18,9 +18,9 @@
 
         @if ($measurement->symptom_free_confirmed_at)
             <p><b>Sie haben bestätigt, dass Sie keine akuten Beschwerden haben.</b></p>
-            <a class="btn btn--white btn--lg btn--block push-down" href="{{ route('patient.home') }}">Zur Startseite</a>
+            <a class="btn btn--white btn--lg btn--block" href="{{ route('patient.home') }}">Zur Startseite</a>
         @else
-            <form method="POST" action="{{ route('patient.measurements.confirm', $measurement) }}" class="stack stack--sm push-down" data-symptom-free-form>
+            <form method="POST" action="{{ route('patient.measurements.confirm', $measurement) }}" class="stack stack--sm" data-symptom-free-form>
                 @csrf
                 <b style="font-size:15px">Keine akuten Beschwerden?</b>
                 <label class="checkbox">

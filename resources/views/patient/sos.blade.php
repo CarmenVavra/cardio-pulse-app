@@ -90,7 +90,7 @@
             @if ($alarm->false_alarm_at)
                 <p class="sos__note" role="status">Sie haben einen Fehlalarm gemeldet. Das Krankenhaus meldet sich bei Bedarf bei Ihnen.</p>
             @else
-                <form method="POST" action="{{ route('patient.sos.false-alarm') }}" class="push-down">
+                <form method="POST" action="{{ route('patient.sos.false-alarm') }}">
                     @csrf
                     <button type="submit" class="btn btn--outline-light btn--lg btn--block" data-confirm="Fehlalarm melden? Das Krankenhaus wird trotzdem nachsehen, ob alles in Ordnung ist.">Fehlalarm – ich brauche keine Hilfe</button>
                 </form>
@@ -129,7 +129,7 @@
                 @endif
             </p>
 
-            <a class="btn btn--outline-light btn--lg btn--block btn--start push-down" href="tel:{{ $emergency }}">
+            <a class="btn btn--outline-light btn--lg btn--block btn--start" href="tel:{{ $emergency }}">
                 <x-icon name="phone" size="22" stroke="2.4" />Nur Notruf {{ $emergency }} anrufen
             </a>
         @endif
