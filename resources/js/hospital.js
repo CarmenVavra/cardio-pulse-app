@@ -95,12 +95,14 @@ if (body.dataset.sound === '1') {
 
 let openAlarms = 0;
 let unclaimedAlarms = 0;
+let urgentAlarms = 0;
 let lastAlarmId = null;
 let newestAlarmId = null;
 
 function updateTone() {
-    // Ton nur, solange sich bei mindestens einem Alarm noch niemand kümmert.
-    const shouldPlay = unclaimedAlarms > 0 && tone.enabled && !tone.muted && page !== 'call';
+    // Ton nur, solange sich bei mindestens einem Alarm noch niemand kümmert – oder der
+    // eigene Notfall-Patient darauf wartet, dass das Krankenhaus die Rettung ruft.
+    const shouldPlay = (unclaimedAlarms > 0 || urgentAlarms > 0) && tone.enabled && !tone.muted && page !== 'call';
     if (shouldPlay) {
         tone.start();
     } else {
@@ -212,6 +214,11 @@ function updateModal(data) {
                 textarea.focus({ preventScroll: true });
             }
         }
+        // Patient bittet um die Rettung bzw. antwortet nicht mehr: Fenster wieder öffnen.
+        if (data.alarm_urgent && !data.alarm_passive && layer.hidden) {
+            minimizedAlarmId = null;
+            showModal();
+        }
     } else if (String(minimizedAlarmId) !== String(data.alarm_id) && layer.hidden) {
         showModal();
     }
@@ -262,7 +269,7 @@ document.addEventListener('submit', async (event) => {
         }
     }
 
-    if (form.matches('[data-claim-form]')) {
+    if (form.matches('[data-claim-form], [data-rescue-form]')) {
         event.preventDefault();
         if (event.submitter) {
             event.submitter.disabled = true;
@@ -391,9 +398,10 @@ function apply(data) {
 
     openAlarms = data.open_alarms;
     unclaimedAlarms = data.unclaimed_alarms ?? data.open_alarms;
-    if (data.newest_alarm_id && data.newest_alarm_id !== newestAlarmId) {
-        tone.muted = false; // Neuer Alarm: Ton immer wieder einschalten.
+    if ((data.newest_alarm_id && data.newest_alarm_id !== newestAlarmId) || (data.urgent_alarms ?? 0) > urgentAlarms) {
+        tone.muted = false; // Neuer Alarm bzw. Bitte um Rettung: Ton immer wieder einschalten.
     }
+    urgentAlarms = data.urgent_alarms ?? 0;
     newestAlarmId = data.newest_alarm_id;
     lastAlarmId = data.alarm_id;
 

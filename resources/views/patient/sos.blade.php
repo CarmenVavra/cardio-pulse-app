@@ -15,6 +15,9 @@
     <section class="sos" data-sos
              data-status-url="{{ route('patient.sos.status') }}"
              data-location-url="{{ route('patient.sos.location') }}"
+             data-respond-url="{{ route('patient.sos.respond') }}"
+             data-response="{{ $alarm?->patient_response?->value }}"
+             data-rescue="{{ $alarm?->isRescueCalled() ? '1' : '0' }}"
              data-consent="{{ $consent ? '1' : '0' }}"
              data-open="{{ $alarm ? '1' : '0' }}"
              data-located="{{ $alarm?->location ? '1' : '0' }}">
@@ -29,10 +32,41 @@
                 <span><b>Das Krankenhaus ist alarmiert</b> · seit {{ $alarm->triggered_at->format('H:i') }} Uhr</span>
             </div>
 
-            <a class="btn btn--white btn--xl btn--block btn--start sos__call" href="tel:{{ $emergency }}" data-sos-call>
-                <x-icon name="phone" size="28" stroke="2.4" />Notruf {{ $emergency }} anrufen
-            </a>
-            <p class="sos__hint">Die App kann keinen Rettungswagen schicken – bitte rufen Sie jetzt selbst den Notruf an und sagen Sie, wo Sie sind.</p>
+            @if ($alarm->isRescueCalled())
+                <div class="sos__rescue" role="status">
+                    <x-icon name="siren" size="26" stroke="2.4" />
+                    <span><b>Das Krankenhaus hat die Rettung verständigt</b> ({{ $alarm->rescue_called_at->format('H:i') }} Uhr). Bleiben Sie wenn möglich am Handy erreichbar und öffnen Sie die Tür.</span>
+                </div>
+                <a class="btn btn--outline-light btn--lg btn--block btn--start" href="tel:{{ $emergency }}">
+                    <x-icon name="phone" size="22" stroke="2.4" />Notruf {{ $emergency }} anrufen
+                </a>
+            @else
+                <h2 class="sos__question">Wer ruft die Rettung?</h2>
+
+                @if ($alarm->patient_response === \App\Enums\SosResponse::HospitalCalls)
+                    <p class="sos__note" role="status">Sie haben das Krankenhaus gebeten, die Rettung zu rufen. Bleiben Sie wenn möglich am Handy erreichbar.</p>
+                @else
+                    @if ($alarm->patient_response === \App\Enums\SosResponse::SelfCalling)
+                        <p class="sos__note" role="status">Sie haben angegeben, selbst den Notruf {{ $emergency }} anzurufen.</p>
+                    @endif
+                    <a class="btn btn--white btn--xl btn--block btn--start sos__call" href="tel:{{ $emergency }}" data-sos-self>
+                        <x-icon name="phone" size="28" stroke="2.4" />Ich rufe selbst {{ $emergency }} an
+                    </a>
+                    <p class="sos__hint">Sagen Sie am Telefon, wo Sie sind. Das Krankenhaus erfährt, dass Sie selbst anrufen.</p>
+                @endif
+
+                @if ($alarm->patient_response !== \App\Enums\SosResponse::HospitalCalls)
+                    <form method="POST" action="{{ route('patient.sos.respond') }}">
+                        @csrf
+                        <input type="hidden" name="response" value="hospital">
+                        <button type="submit" class="btn btn--white btn--lg btn--block sos__ask">Ich kann nicht telefonieren – bitte Rettung rufen</button>
+                    </form>
+                @else
+                    <a class="btn btn--outline-light btn--lg btn--block btn--start" href="tel:{{ $emergency }}" data-sos-self>
+                        <x-icon name="phone" size="22" stroke="2.4" />Doch selbst {{ $emergency }} anrufen
+                    </a>
+                @endif
+            @endif
 
             <ul class="sos__facts">
                 <li data-sos-claimed>

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\AlarmType;
+use App\Enums\SosResponse;
 use App\Models\Alarm;
 use App\Models\AuditLog;
 use App\Models\Patient;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
  * Notfalltaste (SOS) der Patienten-App: Alarm im Krankenhaus auslösen, Standort
  * mitschicken (nur mit Einwilligung), Fehlalarm melden. Den Notruf 144 wählt der
  * Patient selbst auf seinem Handy – die App kann keinen Rettungsdienst alarmieren.
+ * Kann er nicht telefonieren, bittet er das Krankenhaus darum (respond()).
  */
 class EmergencyService
 {
@@ -93,9 +95,34 @@ class EmergencyService
         return $alarm;
     }
 
+    /**
+     * Patient gibt an, wer die Rettung ruft: er selbst oder das Krankenhaus. Er kann
+     * jederzeit wechseln (z. B. wenn der eigene Anruf nicht klappt); „Krankenhaus soll
+     * rufen“ nimmt einen gemeldeten Fehlalarm zurück.
+     */
+    public function respond(Patient $patient, SosResponse $response): ?Alarm
+    {
+        $alarm = $this->openAlarm($patient);
+        if ($alarm === null || ($alarm->patient_response === $response && $alarm->false_alarm_at === null)) {
+            return $alarm;
+        }
+
+        $alarm->update([
+            'patient_response' => $response,
+            'responded_at' => now(),
+        ] + ($response === SosResponse::HospitalCalls ? ['false_alarm_at' => null] : []));
+
+        AuditLog::record(match ($response) {
+            SosResponse::SelfCalling => 'alarm.patient_calls_rescue',
+            SosResponse::HospitalCalls => 'alarm.patient_requests_rescue',
+        }, $alarm);
+
+        return $alarm;
+    }
+
     public function openAlarm(Patient $patient): ?Alarm
     {
-        return $patient->alarms()->open()->sos()->with('claimedBy')->latest('triggered_at')->first();
+        return $patient->alarms()->open()->sos()->with(['claimedBy', 'rescueCalledBy'])->latest('triggered_at')->first();
     }
 
     /**

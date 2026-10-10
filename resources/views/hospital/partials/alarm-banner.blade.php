@@ -11,7 +11,13 @@
             {{ $locked ? $alarm->patient->patient_number : $alarm->patient->fullName() }}
             @if ($sos)
                 · {{ $alarm->location ? 'Standort übermittelt' : 'ohne Standort' }}
-                @if ($alarm->false_alarm_at) · Patient meldet Fehlalarm @endif
+                @switch ($alarm->rescueState())
+                    @case ('rescue_called') · Rettung verständigt @break
+                    @case ('false_alarm') · Patient meldet Fehlalarm @break
+                    @case ('hospital') · <b>bittet: Krankenhaus soll Rettung rufen</b> @break
+                    @case ('no_response') · <b>keine Rückmeldung</b> @break
+                    @case ('self') · ruft laut Angabe selbst {{ config('cardiopulse.emergency_number') }} an @break
+                @endswitch
             @elseif ($alarm->measurement)
                 · {{ $alarm->measurement->reading() }} mmHg
                 @if ($alarm->measurement->symptoms) · {{ $alarm->measurement->symptomLabels() }} @endif

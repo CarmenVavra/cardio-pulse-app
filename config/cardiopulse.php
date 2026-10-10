@@ -55,6 +55,13 @@ return [
     'emergency_number' => env('CARDIOPULSE_EMERGENCY_NUMBER', '144'),
 
     /*
+     | Notfalltaste: Hat der Patient nach so vielen Sekunden nicht angegeben, ob er selbst
+     | den Notruf wählt, gilt das wie „Krankenhaus soll die Rettung rufen“ – wer nicht mehr
+     | antworten kann, braucht am dringendsten Hilfe.
+     */
+    'sos_response_seconds' => (int) env('CARDIOPULSE_SOS_RESPONSE_SECONDS', 60),
+
+    /*
      | Videosprechstunde (WebRTC): Bild und Ton laufen direkt zwischen den Browsern.
      | STUN hilft beim Finden der öffentlichen Adresse (Standard: Nextcloud, Deutschland –
      | sieht nur die IP-Adresse, keine Inhalte). TURN leitet weiter, wenn keine direkte

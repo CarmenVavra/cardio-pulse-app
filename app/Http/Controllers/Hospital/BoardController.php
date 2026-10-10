@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hospital;
 
 use App\Http\Controllers\Controller;
+use App\Models\Alarm;
 use App\Services\BoardSnapshot;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,9 +39,14 @@ class BoardController extends Controller
             'open_alarms' => $openAlarms->count(),
             // Signalton nur, solange sich noch niemand um einen Alarm kümmert.
             'unclaimed_alarms' => $openAlarms->whereNull('claimed_by')->count(),
+            // … und für den zuständigen Arzt, solange er die Rettung rufen soll.
+            'urgent_alarms' => $openAlarms
+                ->filter(fn (Alarm $alarm) => $alarm->needsRescueByHospital() && ! $alarm->isClaimedByOther($request->user()))
+                ->count(),
             'newest_alarm_id' => $openAlarms->max('id'),
             'alarm_id' => $firstAlarm?->id,
             'alarm_version' => $firstAlarm?->version(),
+            'alarm_urgent' => $firstAlarm?->needsRescueByHospital() ?? false,
             'alarm_passive' => $firstAlarm?->isClaimedByOther($request->user()) ?? false,
             'banner_html' => view('hospital.partials.alarm-banner', compact('openAlarms', 'acknowledged', 'locked'))->render(),
             'modal_html' => $firstAlarm && ! $locked

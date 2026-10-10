@@ -73,6 +73,9 @@ class AuditLogFormatter
         'alarm.sos_repeated' => 'Notfalltaste erneut gedrückt',
         'alarm.location_received' => 'Standort im Notfall übermittelt',
         'alarm.false_alarm' => 'Patient meldet Fehlalarm',
+        'alarm.patient_calls_rescue' => 'Patient ruft selbst den Notruf an',
+        'alarm.patient_requests_rescue' => 'Patient bittet: Krankenhaus soll Rettung rufen',
+        'alarm.rescue_called' => 'Rettung verständigt',
         'patient.location_consent_given' => 'Standort im Notfall freigegeben',
         'patient.location_consent_withdrawn' => 'Standortfreigabe widerrufen',
         'call.started' => 'Anruf gestartet',
@@ -139,6 +142,8 @@ class AuditLogFormatter
         'location' => 'Standort übermittelt',
         'location_deleted' => 'Standort gelöscht',
         'seconds_open' => 'Offen (s)',
+        'patient_response' => 'Angabe des Patienten',
+        'rescue_called' => 'Rettung verständigt',
     ];
 
     /**
@@ -149,6 +154,7 @@ class AuditLogFormatter
         'via' => ['console' => 'Kommandozeile (Server)'],
         'direction' => ['to_patient' => 'Arzt → Patient', 'to_clinic' => 'Patient → Klinik'],
         'type' => ['sos' => 'Notfalltaste', 'measurement' => 'Hoher Messwert'],
+        'patient_response' => ['self' => 'ruft selbst an', 'hospital' => 'Krankenhaus soll rufen'],
         'status' => [
             'red' => 'Rot',
             'amber' => 'Gelb-Orange',

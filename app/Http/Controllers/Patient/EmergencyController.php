@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Patient;
 
 use App\Http\Requests\SosRequest;
+use App\Http\Requests\SosResponseRequest;
 use App\Models\Alarm;
 use App\Services\EmergencyService;
 use Illuminate\Http\JsonResponse;
@@ -52,7 +53,22 @@ class EmergencyController extends PatientAreaController
     }
 
     /**
-     * Für die Live-Anzeige in der App: alarmiert, übernommen, bearbeitet.
+     * „Ich rufe selbst an“ (meldet die App beim Tippen auf den Notruf-Link) oder
+     * „Ich kann nicht telefonieren – bitte Rettung rufen“.
+     */
+    public function respond(SosResponseRequest $request, EmergencyService $emergency): JsonResponse|RedirectResponse
+    {
+        $alarm = $emergency->respond($this->patient($request), $request->sosResponse());
+
+        if ($request->expectsJson()) {
+            return response()->json($this->state($alarm));
+        }
+
+        return redirect()->route('patient.sos');
+    }
+
+    /**
+     * Für die Live-Anzeige in der App: alarmiert, übernommen, Rettung verständigt, bearbeitet.
      */
     public function status(Request $request, EmergencyService $emergency): JsonResponse
     {
@@ -65,7 +81,7 @@ class EmergencyController extends PatientAreaController
     }
 
     /**
-     * @return array{open: bool, claimed_by: string|null, located: bool}
+     * @return array{open: bool, claimed_by: string|null, located: bool, response: string|null, rescue_called: bool}
      */
     private function state(?Alarm $alarm): array
     {
@@ -75,6 +91,8 @@ class EmergencyController extends PatientAreaController
             'open' => $alarm?->isOpen() ?? false,
             'claimed_by' => $alarm?->claimedBy?->displayName(),
             'located' => $alarm?->location !== null,
+            'response' => $alarm?->patient_response?->value,
+            'rescue_called' => $alarm?->isRescueCalled() ?? false,
         ];
     }
 }

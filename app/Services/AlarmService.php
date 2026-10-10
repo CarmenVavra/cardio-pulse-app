@@ -12,7 +12,8 @@ class AlarmService
     /**
      * Offene (nicht quittierte) Alarme in der Reihenfolge, in der der Betrachter sie
      * abarbeiten soll: zuerst die von ihm selbst übernommenen, dann die noch freien
-     * (Notfalltaste vor hohem Messwert), zuletzt die von Kollegen übernommenen –
+     * (Notfalltaste, bei der das Krankenhaus die Rettung rufen soll, vor den übrigen
+     * Notfalltasten, diese vor hohem Messwert), zuletzt die von Kollegen übernommenen –
      * jeweils der älteste zuerst. So landen gleichzeitige Notfälle bei verschiedenen Ärzten.
      *
      * @return Collection<int, Alarm>
@@ -22,7 +23,7 @@ class AlarmService
         return Alarm::query()
             ->open()
             ->whereHas('patient')
-            ->with(['patient', 'measurement', 'claimedBy'])
+            ->with(['patient', 'measurement', 'claimedBy', 'rescueCalledBy'])
             ->get()
             ->sortBy([
                 fn (Alarm $a, Alarm $b) => $this->rank($a, $viewer) <=> $this->rank($b, $viewer),
@@ -68,6 +69,38 @@ class AlarmService
     }
 
     /**
+     * „Rettung verständigt“: hält fest, wer die Rettung wann gerufen hat – der Patient sieht
+     * das in der App, Kollegen rufen nicht ein zweites Mal an. Wer die Rettung ruft,
+     * übernimmt damit auch einen noch freien Alarm. Atomar – nur der erste zählt.
+     */
+    public function markRescueCalled(Alarm $alarm, User $user): Alarm
+    {
+        $marked = Alarm::query()
+            ->whereKey($alarm->id)
+            ->open()
+            ->whereNull('rescue_called_at')
+            ->update(['rescue_called_by' => $user->id, 'rescue_called_at' => now()]);
+
+        if ($marked === 1) {
+            Alarm::query()
+                ->whereKey($alarm->id)
+                ->whereNull('claimed_by')
+                ->update(['claimed_by' => $user->id, 'claimed_at' => now()]);
+        }
+
+        $alarm->refresh()->load(['claimedBy', 'rescueCalledBy']);
+
+        if ($marked === 1) {
+            AuditLog::record('alarm.rescue_called', $alarm, [
+                'patient_id' => $alarm->patient_id,
+                'patient_response' => $alarm->patient_response?->value,
+            ], $user);
+        }
+
+        return $alarm;
+    }
+
+    /**
      * Pflicht-Quittierung: Benutzer + Zeitstempel (+ optionale Maßnahme) werden protokolliert.
      * Ein übermittelter Standort wird dabei gelöscht – er wird nur für den Notfall gebraucht.
      */
@@ -92,6 +125,8 @@ class AlarmService
             'measurement_id' => $alarm->measurement_id,
             'note' => $note,
             'location_deleted' => $hadLocation ?: null,
+            'patient_response' => $alarm->patient_response?->value,
+            'rescue_called' => $alarm->isRescueCalled() ?: null,
             'seconds_open' => (int) $alarm->triggered_at->diffInSeconds(now(), true),
         ], $user);
 
@@ -99,14 +134,19 @@ class AlarmService
     }
 
     /**
-     * 0 = vom Betrachter übernommen, 1/2 = frei (Notfalltaste/Messwert), 3 = von Kollegen übernommen.
+     * 0 = vom Betrachter übernommen, 1–3 = frei (Rettung durch Krankenhaus / Notfalltaste /
+     * Messwert), 4 = von Kollegen übernommen.
      */
     private function rank(Alarm $alarm, ?User $viewer): int
     {
         if ($alarm->claimed_by !== null) {
-            return $viewer !== null && $alarm->claimed_by === $viewer->id ? 0 : 3;
+            return $viewer !== null && $alarm->claimed_by === $viewer->id ? 0 : 4;
         }
 
-        return $alarm->isSos() ? 1 : 2;
+        return match (true) {
+            $alarm->needsRescueByHospital() => 1,
+            $alarm->isSos() => 2,
+            default => 3,
+        };
     }
 }

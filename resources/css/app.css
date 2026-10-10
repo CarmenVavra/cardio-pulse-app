@@ -1312,6 +1312,33 @@ a.user-chip[aria-current="page"] .user-chip__name {
     border-bottom: var(--rule);
 }
 
+.alarm-modal__rescue {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    padding: 12px 24px;
+    background: var(--surface);
+    color: var(--navy);
+    font-size: 14px;
+    border-bottom: var(--rule);
+}
+
+.alarm-modal__rescue span {
+    flex: 1 1 260px;
+}
+
+.alarm-modal__rescue--urgent {
+    background: var(--red);
+    color: #fff;
+    font-size: 15px;
+}
+
+.alarm-modal__rescue--done {
+    background: var(--green-tint);
+    border-left: 6px solid var(--green);
+}
+
 .alarm-modal__location {
     border-left: var(--rule);
     padding-left: 22px;
@@ -2738,6 +2765,32 @@ a.user-chip[aria-current="page"] .user-chip__name {
     line-height: 1.45;
 }
 
+.sos__question {
+    margin: 0;
+    font-size: 22px;
+}
+
+.sos__ask {
+    color: var(--red-dark);
+    white-space: normal;
+}
+
+.sos__rescue {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #fff;
+    color: var(--navy);
+    padding: 16px;
+    font-size: 17px;
+    line-height: 1.4;
+}
+
+.sos__rescue svg {
+    flex: none;
+    color: var(--red-dark);
+}
+
 .sos__facts {
     margin: 0;
     padding-left: 20px;
@@ -3629,7 +3682,8 @@ a.msg-badge:hover {
     }
 
     .alarm-modal__claim,
-    .alarm-modal__false {
+    .alarm-modal__false,
+    .alarm-modal__rescue {
         padding: 12px 16px;
     }
 

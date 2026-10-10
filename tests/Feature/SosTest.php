@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Enums\AlarmType;
+use App\Enums\SosResponse;
 use App\Models\Alarm;
+use App\Models\AuditLog;
 use App\Models\Patient;
 use App\Models\User;
 use App\Services\AlarmService;
@@ -64,7 +66,7 @@ class SosTest extends TestCase
 
         $this->get(route('patient.sos'))
             ->assertSee('Das Krankenhaus ist alarmiert')
-            ->assertSee('Notruf 144 anrufen')
+            ->assertSee('Ich rufe selbst 144 an')
             ->assertSee('Ihr Standort wurde an das Krankenhaus übermittelt.')
             ->assertDontSee('data-sos-button', false);
     }
@@ -255,7 +257,134 @@ class SosTest extends TestCase
         $patient = $this->patient();
         $alarm = app(EmergencyService::class)->trigger($patient);
 
-        $this->actingAs($this->staff())->post(route('patient.sos.store'))->assertForbidden();
+        $doctor = $this->staff();
+        $this->actingAs($doctor)->post(route('patient.sos.store'))->assertForbidden();
+        $this->actingAs($doctor)->post(route('patient.sos.respond'), ['response' => 'self'])->assertForbidden();
         $this->actingAs($patient->user)->post(route('alarms.claim', $alarm))->assertForbidden();
+        $this->actingAs($patient->user)->post(route('alarms.rescue', $alarm))->assertForbidden();
+    }
+
+    public function test_patient_is_asked_who_calls_the_rescue(): void
+    {
+        $patient = $this->patient();
+        app(EmergencyService::class)->trigger($patient);
+
+        $this->actingAs($patient->user)->get(route('patient.sos'))
+            ->assertSee('Wer ruft die Rettung?')
+            ->assertSee('Ich rufe selbst 144 an')
+            ->assertSee('data-sos-self', false)
+            ->assertSee('Ich kann nicht telefonieren – bitte Rettung rufen');
+
+        $this->actingAs($this->staff())->get(route('board'))
+            ->assertSee('Patient wird gefragt, wer die Rettung ruft.')
+            ->assertSee('data-rescue-state="waiting"', false);
+    }
+
+    public function test_patient_calling_the_rescue_themselves_is_shown_but_not_confirmed(): void
+    {
+        $patient = $this->patient(['first_name' => 'Anna', 'last_name' => 'Selbst']);
+        $this->actingAs($patient->user);
+        app(EmergencyService::class)->trigger($patient);
+
+        $this->postJson(route('patient.sos.respond'), ['response' => 'self'])
+            ->assertOk()
+            ->assertJson(['open' => true, 'response' => 'self', 'rescue_called' => false]);
+        // Erneutes Tippen protokolliert nicht doppelt.
+        $this->postJson(route('patient.sos.respond'), ['response' => 'self'])->assertOk();
+        $this->assertSame(1, AuditLog::query()->where('action', 'alarm.patient_calls_rescue')->count());
+
+        $this->get(route('patient.sos'))
+            ->assertSee('Sie haben angegeben, selbst den Notruf 144 anzurufen.')
+            ->assertSee('Ich kann nicht telefonieren');
+
+        // Auch nach Ablauf der Frist gilt die Angabe – kein „Keine Rückmeldung“.
+        $this->travel(5)->minutes();
+        $this->actingAs($this->staff())->get(route('board'))
+            ->assertSee('ruft laut eigener Angabe selbst 144 an')
+            ->assertSee('nicht bestätigt');
+        $this->getJson(route('board.live'))->assertJson(['alarm_urgent' => false, 'urgent_alarms' => 0]);
+    }
+
+    public function test_patient_asks_the_hospital_to_call_the_rescue(): void
+    {
+        $doctor = $this->staff();
+        $older = $this->patient(['first_name' => 'Bruno', 'last_name' => 'Frueher']);
+        app(EmergencyService::class)->trigger($older);
+        app(AlarmService::class)->claim(Alarm::query()->sole(), User::factory()->staff()->create(['username' => 't.krause', 'name' => 'Tobias Krause']));
+        $this->travel(5)->seconds();
+
+        $patient = $this->patient(['first_name' => 'Anna', 'last_name' => 'Hilfe']);
+        $this->actingAs($patient->user);
+        $this->postJson(route('patient.sos.store'))->assertOk();
+        $this->post(route('patient.sos.false-alarm'));
+
+        // Bitte um Rettung nimmt einen versehentlich gemeldeten Fehlalarm zurück.
+        $this->post(route('patient.sos.respond'), ['response' => 'hospital'])->assertRedirect(route('patient.sos'));
+        $alarm = $patient->alarms()->sole();
+        $this->assertNull($alarm->false_alarm_at);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'alarm.patient_requests_rescue', 'user_id' => $patient->user->id]);
+
+        $this->get(route('patient.sos'))
+            ->assertSee('Sie haben das Krankenhaus gebeten, die Rettung zu rufen.')
+            ->assertSee('Doch selbst 144 anrufen')
+            ->assertDontSee('Ich kann nicht telefonieren');
+
+        $this->actingAs($doctor)->get(route('board'))
+            ->assertSee('Das Krankenhaus soll die Rettung rufen.')
+            ->assertSee('bittet: Krankenhaus soll Rettung rufen')
+            ->assertSee('alarm-modal__rescue--urgent', false);
+        $this->getJson(route('board.live'))->assertJson(['alarm_id' => $alarm->id, 'alarm_urgent' => true, 'urgent_alarms' => 1]);
+    }
+
+    public function test_no_answer_counts_as_a_request_for_the_rescue(): void
+    {
+        config(['cardiopulse.sos_response_seconds' => 60]);
+        $alarm = app(EmergencyService::class)->trigger($this->patient());
+        $this->actingAs($this->staff());
+
+        $this->travel(59)->seconds();
+        $this->getJson(route('board.live'))->assertJson(['alarm_urgent' => false]);
+        $before = $alarm->fresh()->version();
+
+        $this->travel(2)->seconds();
+        $this->getJson(route('board.live'))->assertJson(['alarm_urgent' => true, 'urgent_alarms' => 1]);
+        $this->assertNotSame($before, $alarm->fresh()->version());
+        $this->get(route('board'))->assertSee('Keine Rückmeldung vom Patienten')->assertSee('keine Rückmeldung');
+    }
+
+    public function test_hospital_records_that_the_rescue_was_called(): void
+    {
+        $weber = $this->staff();
+        $krause = User::factory()->staff()->create(['username' => 't.krause', 'name' => 'Tobias Krause']);
+        $patient = $this->patient();
+        $alarm = app(EmergencyService::class)->trigger($patient);
+        app(EmergencyService::class)->respond($patient, SosResponse::HospitalCalls);
+
+        $this->actingAs($weber)->postJson(route('alarms.rescue', $alarm))
+            ->assertOk()
+            ->assertJson(['rescue_called' => true, 'rescue_called_by' => 'Dr. M. Weber']);
+
+        $alarm->refresh();
+        $this->assertSame($weber->id, $alarm->rescue_called_by);
+        $this->assertSame($weber->id, $alarm->claimed_by, 'Wer die Rettung ruft, übernimmt den Alarm.');
+        $this->assertFalse($alarm->needsRescueByHospital());
+        $this->assertDatabaseHas('audit_logs', ['action' => 'alarm.rescue_called', 'user_id' => $weber->id]);
+
+        // Ein Kollege überschreibt das nicht.
+        $this->actingAs($krause)->postJson(route('alarms.rescue', $alarm))->assertOk()->assertJson(['rescue_called_by' => 'Dr. M. Weber']);
+        $this->assertSame(1, AuditLog::query()->where('action', 'alarm.rescue_called')->count());
+
+        $this->get(route('board'))->assertSee('Rettung verständigt</b> von Dr. M. Weber', false);
+        $this->getJson(route('board.live'))->assertJson(['unclaimed_alarms' => 0, 'urgent_alarms' => 0]);
+
+        $this->actingAs($patient->user)->getJson(route('patient.sos.status'))->assertJson(['rescue_called' => true]);
+        $this->get(route('patient.sos'))
+            ->assertSee('Das Krankenhaus hat die Rettung verständigt')
+            ->assertDontSee('Wer ruft die Rettung?');
+
+        $this->actingAs($weber)->postJson(route('alarms.acknowledge', $alarm))->assertOk();
+        $this->get(route('audit.index'))
+            ->assertSee('Rettung verständigt')
+            ->assertSee('Angabe des Patienten: Krankenhaus soll rufen');
     }
 }

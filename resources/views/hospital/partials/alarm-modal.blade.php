@@ -3,6 +3,9 @@
     $measurement = $alarm->measurement;
     $sos = $alarm->isSos();
     $mine = $alarm->claimed_by !== null && $alarm->claimed_by === auth()->id();
+    $rescue = $alarm->rescueState();
+    $emergency = config('cardiopulse.emergency_number');
+    $responseSeconds = (int) config('cardiopulse.sos_response_seconds');
 @endphp
 <div class="alarm-layer__backdrop"></div>
 <div class="alarm-layer__frame blink" aria-hidden="true"></div>
@@ -13,7 +16,9 @@
         <div>
             <h2 class="alarm-modal__title" id="alarm-title">{{ $sos ? 'NOTFALL – PATIENT HAT DIE NOTFALLTASTE GEDRÜCKT' : 'GEFÄHRLICH HOHER BLUTDRUCK' }}</h2>
             <div id="alarm-desc">
-                @if ($alarm->isClaimed())
+                @if ($alarm->needsRescueByHospital())
+                    Signalton aktiv – bis „Rettung verständigt“ eingetragen oder der Alarm quittiert ist
+                @elseif ($alarm->isClaimed())
                     Übernommen – Signalton aus, Alarm bleibt bis zur Quittierung offen
                 @else
                     Signalton aktiv – wiederholt, bis jemand übernimmt oder quittiert
@@ -51,6 +56,38 @@
             Bitte trotzdem zurückrufen und den Alarm danach quittieren.
         </div>
     @endif
+
+    {{-- Wer ruft die Rettung? Antwort des Patienten bzw. „Rettung verständigt“. --}}
+    <div @class(['alarm-modal__rescue', 'alarm-modal__rescue--urgent' => $alarm->needsRescueByHospital(), 'alarm-modal__rescue--done' => $rescue === 'rescue_called']) role="status" data-rescue-state="{{ $rescue ?? 'none' }}">
+        <span>
+            @switch ($rescue)
+                @case ('rescue_called')
+                    <b>Rettung verständigt</b> von {{ $alarm->rescueCalledBy?->shortName() ?? 'einem Kollegen' }} um {{ $alarm->rescue_called_at?->format('H:i') }} – der Patient sieht das in der App.
+                    @break
+                @case ('hospital')
+                    <b>Patient bittet um {{ $alarm->responded_at?->format('H:i') }}: Das Krankenhaus soll die Rettung rufen.</b>
+                    Notruf {{ $emergency }} wählen und Standort bzw. Wohnadresse durchgeben.
+                    @break
+                @case ('no_response')
+                    <b>Keine Rückmeldung vom Patienten</b> – er kann vielleicht nicht mehr telefonieren. Sofort zurückrufen und bei Bedarf die Rettung ({{ $emergency }}) verständigen.
+                    @break
+                @case ('self')
+                    <b>Patient ruft laut eigener Angabe selbst {{ $emergency }} an</b> ({{ $alarm->responded_at?->format('H:i') }}, nicht bestätigt). Zurückrufen und nachfragen.
+                    @break
+                @case ('waiting')
+                    <b>Patient wird gefragt, wer die Rettung ruft.</b> Ohne Antwort gilt nach {{ $responseSeconds }} Sekunden: Das Krankenhaus ruft.
+                    @break
+                @default
+                    Rettungsdienst verständigt? Hier eintragen, damit Kollegen nicht doppelt anrufen.
+            @endswitch
+        </span>
+        @if ($rescue !== 'rescue_called')
+            <form method="POST" action="{{ route('alarms.rescue', $alarm) }}" data-rescue-form>
+                @csrf
+                <button type="submit" @class(['btn', 'btn--white' => $alarm->needsRescueByHospital(), 'btn--outline-taupe' => ! $alarm->needsRescueByHospital()])>Rettung verständigt</button>
+            </form>
+        @endif
+    </div>
 
     <div class="alarm-modal__body">
         <div>
@@ -110,9 +147,9 @@
 
     <div class="alarm-modal__foot">
         @if ($sos)
-            Der Patient wurde in der App aufgefordert, selbst den Notruf {{ config('cardiopulse.emergency_number') }} zu wählen. Bei Bedarf Standort bzw. Adresse an die Rettungsleitstelle durchgeben. Der Standort wird beim Quittieren gelöscht.
+            Der Patient wird in der App gefragt, ob er selbst den Notruf {{ $emergency }} wählt oder das Krankenhaus die Rettung rufen soll. Standort bzw. Adresse an die Rettungsleitstelle durchgeben. Der Standort wird beim Quittieren gelöscht.
         @else
-            Patient ist zu Hause – bei Bedarf Rettungsdienst ({{ config('cardiopulse.emergency_number') }}) an die Wohnadresse schicken. Quittierung wird protokolliert.
+            Patient ist zu Hause – bei Bedarf Rettungsdienst ({{ $emergency }}) an die Wohnadresse schicken. Quittierung wird protokolliert.
         @endif
         @if ($more > 0) <b>Weitere offene Alarme: {{ $more }}</b> @endif
         <button type="button" class="link-button" data-minimize-alarm>Board anzeigen – Alarm bleibt aktiv</button>

@@ -93,6 +93,7 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
         Route::middleware('unlocked')->group(function () {
             Route::post('/alarme/{alarm}/quittieren', [AlarmController::class, 'acknowledge'])->name('alarms.acknowledge');
             Route::post('/alarme/{alarm}/uebernehmen', [AlarmController::class, 'claim'])->name('alarms.claim');
+            Route::post('/alarme/{alarm}/rettung', [AlarmController::class, 'rescue'])->name('alarms.rescue');
 
             Route::get('/patienten', [PatientController::class, 'index'])->name('patients.index');
             Route::get('/patienten/neu', [PatientController::class, 'create'])->name('patients.create');
@@ -184,6 +185,7 @@ Route::prefix('app')->name('patient.')->middleware(['auth', 'role:patient'])->gr
     Route::get('/notfall/status', [EmergencyController::class, 'status'])->name('sos.status');
     Route::post('/notfall/standort', [EmergencyController::class, 'location'])->middleware('throttle:30,1')->name('sos.location');
     Route::post('/notfall/fehlalarm', [EmergencyController::class, 'falseAlarm'])->name('sos.false-alarm');
+    Route::post('/notfall/rueckmeldung', [EmergencyController::class, 'respond'])->middleware('throttle:30,1')->name('sos.respond');
     Route::post('/nachrichten', [PatientMessageController::class, 'store'])->middleware('throttle:20,1')->name('messages.store');
 
     Route::get('/medikation', [PatientMedicationController::class, 'index'])->name('medications.index');

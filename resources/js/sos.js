@@ -1,4 +1,4 @@
-import { getJson, postForm } from './common';
+import { csrfToken, getJson, postForm } from './common';
 
 /**
  * Notfalltaste (SOS) der Patienten-App.
@@ -165,6 +165,19 @@ function initActive(root, consent) {
     const claimed = root.querySelector('[data-sos-claimed]');
     const location = root.querySelector('[data-sos-location]');
 
+    // „Ich rufe selbst an“: dem Krankenhaus melden, dann wählt das Handy wie gewohnt.
+    // sendBeacon kommt auch dann noch an, wenn das Handy sofort zur Telefon-App wechselt.
+    root.querySelectorAll('[data-sos-self]').forEach((link) =>
+        link.addEventListener('click', () => {
+            const body = new FormData();
+            body.append('_token', csrfToken());
+            body.append('response', 'self');
+            if (!navigator.sendBeacon?.(root.dataset.respondUrl, body)) {
+                postForm(root.dataset.respondUrl, body).catch(() => {});
+            }
+        }),
+    );
+
     if (consent && root.dataset.located !== '1' && location) {
         locate().then(async (coords) => {
             if (!coords) {
@@ -189,7 +202,8 @@ function initActive(root, consent) {
     const poll = async () => {
         try {
             const state = await getJson(root.dataset.statusUrl);
-            if (!state.open) {
+            // Bearbeitet, Rettung verständigt oder eigene Angabe geändert: Seite neu zeigen.
+            if (!state.open || (state.response ?? '') !== root.dataset.response || (state.rescue_called ? '1' : '0') !== root.dataset.rescue) {
                 window.location.reload();
                 return;
             }
