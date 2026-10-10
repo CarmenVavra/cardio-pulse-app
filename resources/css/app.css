@@ -2099,6 +2099,9 @@ a.user-chip[aria-current="page"] .user-chip__name {
     margin: 0 auto;
     min-height: 100vh;
     min-height: 100dvh;
+    /* Tatsächlich sichtbare Höhe (patient.js) – manche Android-Handys zählen bei
+       100dvh die Navigationsleiste mit, dann rutschen die unteren Tasten darunter. */
+    min-height: var(--app-height, 100dvh);
     display: flex;
     flex-direction: column;
     background: var(--ground);
@@ -2204,7 +2207,7 @@ a.user-chip[aria-current="page"] .user-chip__name {
 }
 
 /* Ohne Tab-Leiste: Inhalt nicht hinter der Navigationsleiste des Handys verstecken
-   (viewport-fit=cover, installierte App). */
+   (falls das Gerät einen Sicherheitsabstand meldet). */
 .p-app--no-tabs .p-main {
     padding-bottom: env(safe-area-inset-bottom);
 }

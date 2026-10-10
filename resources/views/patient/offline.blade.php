@@ -3,7 +3,7 @@
 <html lang="de">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0F2C59">
     <title>Keine Verbindung · CardioPulse</title>
     {{-- Eigenständig (ohne externe Dateien), weil der Service Worker nur diese Seite für den Offline-Fall speichert. --}}

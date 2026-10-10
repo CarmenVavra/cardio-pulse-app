@@ -8,6 +8,12 @@ import { initVideoCall } from './video-call';
  * Patienten-App: Numpad-Erfassung, Notfall-Bestätigung, Erinnerung, eingehende Anrufe.
  */
 
+// Sichtbare Höhe für das Layout (siehe .p-app): window.innerHeight endet sicher über
+// der Navigationsleiste des Handys, 100dvh tut das nicht auf jedem Gerät.
+const setAppHeight = () => document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+setAppHeight();
+window.addEventListener('resize', setAppHeight);
+
 initCommon();
 initCallScreen();
 initVideoCall();
