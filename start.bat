@@ -6,7 +6,7 @@ setlocal
 cd /d "%~dp0"
 set PORT=8700
 
-netstat -ano | findstr /R /C:":%PORT% .*LISTENING" >nul
+netstat -ano | findstr /R /C:":%PORT%  *0\.0\.0\.0:0 " /C:":%PORT%  *\[::\]:0 " >nul
 if %errorlevel%==0 (
     echo Port %PORT% ist bereits belegt - laeuft CardioPulse schon? Mit stop.bat beenden.
     goto open

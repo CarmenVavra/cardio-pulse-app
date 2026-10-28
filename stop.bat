@@ -6,7 +6,7 @@ setlocal
 set PORT=8700
 set FOUND=0
 
-for /f "tokens=5" %%p in ('netstat -ano ^| findstr /R /C:":%PORT% .*LISTENING"') do (
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr /R /C:":%PORT%  *0\.0\.0\.0:0 " /C:":%PORT%  *\[::\]:0 "') do (
     taskkill /F /PID %%p >nul 2>&1
     set FOUND=1
 )
