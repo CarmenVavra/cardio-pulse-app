@@ -14,6 +14,8 @@ export default defineConfig({
         }),
     ],
     server: {
+        port: 5950,
+        strictPort: true,
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
